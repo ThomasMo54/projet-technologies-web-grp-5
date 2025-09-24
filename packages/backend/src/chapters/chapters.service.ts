@@ -1,16 +1,19 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Chapter } from './chapter.schema';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { CoursesService } from '../courses/courses.service';
+import { QuizzesService } from '../quizzes/quizzes.service';
 
 @Injectable()
 export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private readonly chapterModel: Model<Chapter>,
     private readonly coursesService: CoursesService,
+    @Inject(forwardRef(() => QuizzesService))
+    private readonly quizzesService: QuizzesService,
   ) {}
 
   async createChapter(createChapterDto: CreateChapterDto): Promise<Chapter> {
@@ -18,6 +21,14 @@ export class ChaptersService {
     const course = await this.coursesService.findCourseById(createChapterDto.courseId);
     if (!course) {
       throw new NotFoundException('Course not found');
+    }
+
+    // Vérifier si le quizId existe (si fourni)
+    if (createChapterDto.quizId) {
+      const quiz = await this.quizzesService.findQuizById(createChapterDto.quizId);
+      if (!quiz) {
+        throw new NotFoundException('Quiz not found');
+      }
     }
 
     // Vérifier si un chapitre avec le même titre existe dans le même cours
@@ -62,6 +73,14 @@ export class ChaptersService {
       const course = await this.coursesService.findCourseById(updateChapterDto.courseId);
       if (!course) {
         throw new NotFoundException('Course not found');
+      }
+    }
+
+    // Vérifier si le quizId existe (si fourni)
+    if (updateChapterDto.quizId) {
+      const quiz = await this.quizzesService.findQuizById(updateChapterDto.quizId);
+      if (!quiz) {
+        throw new NotFoundException('Quiz not found');
       }
     }
 
