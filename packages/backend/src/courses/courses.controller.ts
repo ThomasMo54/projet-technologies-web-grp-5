@@ -56,6 +56,12 @@ export class CoursesController {
     return this.coursesService.updateCourse(id, updateCourseDto);
   }
 
+  @Get('student/:studentId')
+  @UseGuards(AuthGuard('jwt'))
+  async findByStudent(@Param('studentId') studentId: string, @Request() req: any): Promise<Course[]> {
+    return this.coursesService.findCoursesByStudent(studentId);
+  }
+
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: string, @Request() req: any): Promise<Course | null> {

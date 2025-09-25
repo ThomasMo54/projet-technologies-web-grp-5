@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course } from './course.schema';
@@ -82,6 +82,20 @@ export class CoursesService {
     }
 
     return this.courseModel.findOneAndUpdate({ uuid: id }, updateCourseDto, { new: true }).exec();
+  }
+
+  async findCoursesByStudent(studentId: string): Promise<Course[]> {
+    // Verify if the user exists and is of type 'student'
+    const user = await this.usersService.findUserById(studentId);
+    if (!user) {
+      throw new NotFoundException(`Student with ID ${studentId} not found`);
+    }
+    if (user.type !== 'student') {
+      throw new ForbiddenException('User is not a student');
+    }
+
+    // Find courses where the studentId is in the students array
+    return this.courseModel.find({ students: studentId }).exec();
   }
 
   async deleteCourse(id: string): Promise<Course | null> {
