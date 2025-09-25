@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Request, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { Quiz } from './quiz.schema';
 import { ChaptersService } from '../chapters/chapters.service';
 import { CoursesService } from '../courses/courses.service';
+import { AuthGuard } from '@nestjs/passport';
+
 
 @Controller('quizzes')
 export class QuizzesController {
@@ -15,6 +17,7 @@ export class QuizzesController {
   ) {}
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
     // Vérifier que l'utilisateur est le créateur du cours associé
     const chapter = await this.chaptersService.findChapterById(createQuizDto.chapterId);
@@ -25,18 +28,17 @@ export class QuizzesController {
     if (!course) {
       throw new ForbiddenException('Associated course not found');
     }
-    if (course.creatorId !== req.user.uuid) {
-      throw new ForbiddenException('You can only create quizzes for your own courses');
-    }
     return this.quizzesService.createQuiz(createQuizDto);
   }
 
   @Get()
+  @UseGuards(AuthGuard('jwt'))
   async findAll(): Promise<Quiz[]> {
     return this.quizzesService.findAllQuizzes();
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
   async findOne(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
@@ -50,13 +52,11 @@ export class QuizzesController {
     if (!course) {
       throw new ForbiddenException('Associated course not found');
     }
-    if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
-      throw new ForbiddenException('You are not allowed to access this quiz');
-    }
     return quiz;
   }
 
   @Get('chapter/:chapterId')
+  @UseGuards(AuthGuard('jwt'))
   async findByChapter(@Param('chapterId') chapterId: string, @Request() req: any): Promise<Quiz[]> {
     const chapter = await this.chaptersService.findChapterById(chapterId);
     if (!chapter) {
@@ -66,13 +66,11 @@ export class QuizzesController {
     if (!course) {
       throw new ForbiddenException('Associated course not found');
     }
-    if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
-      throw new ForbiddenException('You are not allowed to access this course');
-    }
     return this.quizzesService.findQuizzesByChapter(chapterId);
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard('jwt'))
   async update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
@@ -86,13 +84,11 @@ export class QuizzesController {
     if (!course) {
       throw new ForbiddenException('Associated course not found');
     }
-    if (course.creatorId !== req.user.uuid) {
-      throw new ForbiddenException('You can only update quizzes for your own courses');
-    }
     return this.quizzesService.updateQuiz(id, updateQuizDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
@@ -105,9 +101,6 @@ export class QuizzesController {
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
       throw new ForbiddenException('Associated course not found');
-    }
-    if (course.creatorId !== req.user.uuid) {
-      throw new ForbiddenException('You can only delete quizzes for your own courses');
     }
     return this.quizzesService.deleteQuiz(id);
   }
