@@ -1,4 +1,4 @@
-import { OmitType } from "@nestjs/swagger";
 import { CreateChapterDto } from "./create-chapter.dto";
+import { PartialType } from "@nestjs/mapped-types";
 
-export class UpdateChapterDto extends OmitType(CreateChapterDto, ['courseId', 'quizId'] as const) {}
+export class UpdateChapterDto extends PartialType(CreateChapterDto) {}
