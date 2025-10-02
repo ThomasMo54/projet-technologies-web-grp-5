@@ -1,19 +1,4 @@
-import { IsNumber, IsString, MaxLength, ValidateNested } from "class-validator";
-import { QuestionDto } from "./question.dto";
-import { Type } from "class-transformer";
-import { ApiProperty } from "@nestjs/swagger";
+import { OmitType } from "@nestjs/swagger";
+import { CreateQuizDto } from "./create-quiz.dto";
 
-export class UpdateQuizDto {
-  @IsString()
-  @MaxLength(200)
-  @ApiProperty({ example: 'Database Quizz' })
-  title?: string;
-
-  @ValidateNested({ each: true })
-  @Type(() => QuestionDto)
-  @ApiProperty({ type: [QuestionDto] })
-  questions?: QuestionDto[];
-
-  @IsString()
-  chapterId?: string;
-}
+export class UpdateQuizDto extends OmitType(CreateQuizDto, ['chapterId'] as const) {}

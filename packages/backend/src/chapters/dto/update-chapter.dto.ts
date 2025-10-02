@@ -1,18 +1,4 @@
-import { IsString, MaxLength } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { OmitType } from "@nestjs/swagger";
+import { CreateChapterDto } from "./create-chapter.dto";
 
-export class UpdateChapterDto {
-  @IsString()
-  @MaxLength(200)
-  @ApiProperty({ example: 'Database Fundamentals' })
-  title?: string;
-
-  @IsString()
-  content?: string;
-
-  @IsString()
-  courseId?: string;
-
-  @IsString()
-  quizId?: string;
-}
+export class UpdateChapterDto extends OmitType(CreateChapterDto, ['courseId', 'quizId'] as const) {}
