@@ -12,11 +12,11 @@ export const addQuiz = async (data: CreateQuizDto): Promise<IQuiz> => {
   return response.data;
 };
 
-export const updateQuiz = async (id: string, data: UpdateQuizDto): Promise<IQuiz> => {
-  const response = await api.put(`/quizzes/${id}`, data);
+export const updateQuiz = async (uuid: string, data: UpdateQuizDto): Promise<IQuiz> => {
+  const response = await api.put(`/quizzes/${uuid}`, data);
   return response.data;
 };
 
-export const deleteQuiz = async (id: string): Promise<void> => {
-  await api.delete(`/quizzes/${id}`);
+export const deleteQuiz = async (uuid: string): Promise<void> => {
+  await api.delete(`/quizzes/${uuid}`);
 };

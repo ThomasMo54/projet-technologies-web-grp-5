@@ -5,7 +5,7 @@ export interface IQuestion {
 }
 
 export interface IQuiz {
-  id: string;
+  uuid: string;
   title: string;
   questions: IQuestion[];
   chapterId: string;
