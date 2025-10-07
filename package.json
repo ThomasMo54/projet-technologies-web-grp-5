@@ -11,7 +11,17 @@
     "test:frontend": "npm run test --workspace=frontend"
   },
   "keywords": [],
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/swagger": "^11.2.0",
+    "axios": "^1.12.2",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4"
+  }
 }
