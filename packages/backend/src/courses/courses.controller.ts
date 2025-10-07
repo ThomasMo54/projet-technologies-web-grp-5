@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  ForbiddenException,
+  NotFoundException
+} from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -26,10 +38,10 @@ export class CoursesController {
   async findOne(@Param('id') id: string, @Request() req: any): Promise<Course | null> {
     const course = await this.coursesService.findCourseById(id);
     if (!course) {
-      throw new ForbiddenException('Course not found');
+      throw new NotFoundException('Course not found');
     }
     if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
-      throw new ForbiddenException('You are not allowed to access this course');
+      throw new NotFoundException('You are not allowed to access this course');
     }
     return course;
   }
@@ -51,7 +63,7 @@ export class CoursesController {
   async update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto, @Request() req: any): Promise<Course | null> {
     const course = await this.coursesService.findCourseById(id);
     if (!course) {
-      throw new ForbiddenException('Course not found');
+      throw new NotFoundException('Course not found');
     }
     return this.coursesService.updateCourse(id, updateCourseDto);
   }
@@ -67,12 +79,11 @@ export class CoursesController {
   async remove(@Param('id') id: string, @Request() req: any): Promise<Course | null> {
     const course = await this.coursesService.findCourseById(id);
     if (!course) {
-      throw new ForbiddenException('Course not found');
+      throw new NotFoundException('Course not found');
     }
-    // commenter pour l'instant afin de pouvoir tester avec Postman (la meme chose pour les autres modules...)
-    //if (course.creatorId !== req.user.uuid) {
-    //  throw new ForbiddenException('You are not allowed to delete this course');
-    //}
+    if (course.creatorId !== req.user.uuid) {
+      throw new ForbiddenException('You are not allowed to delete this course');
+    }
     return this.coursesService.deleteCourse(id);
   }
 }

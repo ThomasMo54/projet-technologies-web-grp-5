@@ -1,11 +1,4 @@
-export class QuestionDto {
-  text?: string;
-  options?: string[];
-  correctOption?: number;
-}
+import { CreateQuizDto } from "./create-quiz.dto";
+import { PartialType } from "@nestjs/mapped-types";
 
-export class UpdateQuizDto {
-  title?: string;
-  questions?: QuestionDto[];
-  chapterId?: string;
-}
+export class UpdateQuizDto extends PartialType(CreateQuizDto) {}

@@ -1,6 +1,4 @@
-export class UpdateChapterDto {
-  title?: string;
-  content?: string; // Remplacé description par content
-  courseId?: string;
-  quizId?: string;
-}
+import { CreateChapterDto } from "./create-chapter.dto";
+import { PartialType } from "@nestjs/mapped-types";
+
+export class UpdateChapterDto extends PartialType(CreateChapterDto) {}

@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  ForbiddenException,
+  NotFoundException
+} from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -21,11 +33,11 @@ export class QuizzesController {
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
     const chapter = await this.chaptersService.findChapterById(createQuizDto.chapterId);
     if (!chapter) {
-      throw new ForbiddenException('Chapter not found');
+      throw new NotFoundException('Chapter not found');
     }
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
-      throw new ForbiddenException('Associated course not found');
+      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.createQuiz(createQuizDto);
   }
@@ -41,15 +53,15 @@ export class QuizzesController {
   async findOne(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
-      throw new ForbiddenException('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
     const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
     if (!chapter) {
-      throw new ForbiddenException('Associated chapter not found');
+      throw new NotFoundException('Associated chapter not found');
     }
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
-      throw new ForbiddenException('Associated course not found');
+      throw new NotFoundException('Associated course not found');
     }
     return quiz;
   }
@@ -59,11 +71,11 @@ export class QuizzesController {
   async findByChapter(@Param('chapterId') chapterId: string, @Request() req: any): Promise<Quiz[]> {
     const chapter = await this.chaptersService.findChapterById(chapterId);
     if (!chapter) {
-      throw new ForbiddenException('Chapter not found');
+      throw new NotFoundException('Chapter not found');
     }
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
-      throw new ForbiddenException('Associated course not found');
+      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.findQuizzesByChapter(chapterId);
   }
@@ -73,15 +85,15 @@ export class QuizzesController {
   async update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
-      throw new ForbiddenException('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
     const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
     if (!chapter) {
-      throw new ForbiddenException('Associated chapter not found');
+      throw new NotFoundException('Associated chapter not found');
     }
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
-      throw new ForbiddenException('Associated course not found');
+      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.updateQuiz(id, updateQuizDto);
   }
@@ -91,15 +103,15 @@ export class QuizzesController {
   async remove(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
-      throw new ForbiddenException('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
     const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
     if (!chapter) {
-      throw new ForbiddenException('Associated chapter not found');
+      throw new NotFoundException('Associated chapter not found');
     }
     const course = await this.coursesService.findCourseById(chapter.courseId);
     if (!course) {
-      throw new ForbiddenException('Associated course not found');
+      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.deleteQuiz(id);
   }
