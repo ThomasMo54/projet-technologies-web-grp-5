@@ -28,9 +28,6 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any): Promise<User | null> {
-    if (req.user.uuid !== id) {
-      throw new ForbiddenException('You are not allowed to access this resource');
-    }
     return this.usersService.findUserByIdWithoutPassword(id);
   }
 

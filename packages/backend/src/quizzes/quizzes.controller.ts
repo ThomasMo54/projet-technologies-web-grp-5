@@ -19,7 +19,6 @@ export class QuizzesController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
-    // Vérifier que l'utilisateur est le créateur du cours associé
     const chapter = await this.chaptersService.findChapterById(createQuizDto.chapterId);
     if (!chapter) {
       throw new ForbiddenException('Chapter not found');
