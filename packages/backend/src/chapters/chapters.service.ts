@@ -6,14 +6,14 @@ import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { CoursesService } from '../courses/courses.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
+import { Quiz } from "../quizzes/quiz.schema";
 
 @Injectable()
 export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private readonly chapterModel: Model<Chapter>,
-    private readonly coursesService: CoursesService,
-    @Inject(forwardRef(() => QuizzesService))
-    private readonly quizzesService: QuizzesService,
+    @Inject(forwardRef(() => CoursesService)) private readonly coursesService: CoursesService,
+    @Inject(forwardRef(() => QuizzesService)) private readonly quizzesService: QuizzesService,
   ) {}
 
   async createChapter(createChapterDto: CreateChapterDto): Promise<Chapter> {
@@ -58,13 +58,12 @@ export class ChaptersService {
     return this.chapterModel.find().exec();
   }
 
-  async findChaptersByCourse(courseId: string): Promise<Chapter[]> {
-    // Vérifier si le courseId existe
-    const course = await this.coursesService.findCourseById(courseId);
-    if (!course) {
-      throw new NotFoundException('Course not found');
+  async findQuizOfChapter(id: string) : Promise<Quiz | null> {
+    const chapter = await this.findChapterById(id);
+    if (!chapter || !chapter.quizId) {
+      return null;
     }
-    return this.chapterModel.find({ courseId }).exec();
+    return this.quizzesService.findQuizById(chapter.quizId);
   }
 
   async updateChapter(id: string, updateChapterDto: UpdateChapterDto): Promise<Chapter | null> {

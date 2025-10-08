@@ -24,21 +24,11 @@ import { AuthGuard } from '@nestjs/passport';
 export class QuizzesController {
   constructor(
     private readonly quizzesService: QuizzesService,
-    private readonly chaptersService: ChaptersService,
-    private readonly coursesService: CoursesService,
   ) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
-    const chapter = await this.chaptersService.findChapterById(createQuizDto.chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
-    }
     return this.quizzesService.createQuiz(createQuizDto);
   }
 
@@ -55,29 +45,7 @@ export class QuizzesController {
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
     }
-    const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Associated chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
-    }
     return quiz;
-  }
-
-  @Get('chapter/:chapterId')
-  @UseGuards(AuthGuard('jwt'))
-  async findByChapter(@Param('chapterId') chapterId: string, @Request() req: any): Promise<Quiz[]> {
-    const chapter = await this.chaptersService.findChapterById(chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
-    }
-    return this.quizzesService.findQuizzesByChapter(chapterId);
   }
 
   @Put(':id')
@@ -86,14 +54,6 @@ export class QuizzesController {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
-    }
-    const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Associated chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.updateQuiz(id, updateQuizDto);
   }
@@ -104,14 +64,6 @@ export class QuizzesController {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
-    }
-    const chapter = await this.chaptersService.findChapterById(quiz.chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Associated chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
     }
     return this.quizzesService.deleteQuiz(id);
   }

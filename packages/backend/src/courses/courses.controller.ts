@@ -16,6 +16,8 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './course.schema';
 import { AuthGuard } from '@nestjs/passport';
+import { AddRemoveStudentsDto } from "./dto/add-remove-students.dto";
+import { Chapter } from "../chapters/chapter.schema";
 
 @Controller('courses')
 export class CoursesController {
@@ -24,6 +26,9 @@ export class CoursesController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createCourseDto: CreateCourseDto, @Request() req: any): Promise<Course> {
+    if (req.user.uuid !== createCourseDto.creatorId) {
+      throw new ForbiddenException('You are not allowed to create a course for another user');
+    }
     return this.coursesService.createCourse(createCourseDto);
   }
 
@@ -58,6 +63,18 @@ export class CoursesController {
     return this.coursesService.findCoursesByCreator(creatorId);
   }
 
+  @Get('student/:studentId')
+  @UseGuards(AuthGuard('jwt'))
+  async findByStudent(@Param('studentId') studentId: string, @Request() req: any): Promise<Course[]> {
+    return this.coursesService.findCoursesByStudent(studentId);
+  }
+
+  @Get(':id/chapters')
+  @UseGuards(AuthGuard('jwt'))
+  async findChapters(@Param('id') id: string): Promise<Chapter[]> {
+    return this.coursesService.findChaptersOfCourse(id);
+  }
+
   @Put(':id')
   @UseGuards(AuthGuard('jwt'))
   async update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto, @Request() req: any): Promise<Course | null> {
@@ -68,10 +85,17 @@ export class CoursesController {
     return this.coursesService.updateCourse(id, updateCourseDto);
   }
 
-  @Get('student/:studentId')
+  @Put(':id/enroll')
   @UseGuards(AuthGuard('jwt'))
-  async findByStudent(@Param('studentId') studentId: string, @Request() req: any): Promise<Course[]> {
-    return this.coursesService.findCoursesByStudent(studentId);
+  async addStudents(@Param('id') id: string, @Body() addStudentsDto: AddRemoveStudentsDto, @Request() req: any): Promise<Course | null> {
+    const course = await this.coursesService.findCourseById(id);
+    if (course?.creatorId !== req.user.uuid && addStudentsDto.students?.some(studentId => studentId !== req.user.uuid)) {
+      throw new ForbiddenException('You are not allowed to enroll students in this course');
+    }
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    return this.coursesService.addUsersToCourse(id, addStudentsDto.students ?? []);
   }
 
   @Delete(':id')
@@ -85,5 +109,18 @@ export class CoursesController {
       throw new ForbiddenException('You are not allowed to delete this course');
     }
     return this.coursesService.deleteCourse(id);
+  }
+
+  @Delete(':id/unenroll')
+  @UseGuards(AuthGuard('jwt'))
+  async removeStudents(@Param('id') id: string, @Body() removeStudentsDto: AddRemoveStudentsDto, @Request() req: any): Promise<Course | null> {
+    const course = await this.coursesService.findCourseById(id);
+    if (course?.creatorId !== req.user.uuid && removeStudentsDto.students?.some(studentId => studentId !== req.user.uuid)) {
+      throw new ForbiddenException('You are not allowed to unenroll students from this course');
+    }
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    return this.coursesService.removeUsersFromCourse(id, removeStudentsDto.students ?? []);
   }
 }

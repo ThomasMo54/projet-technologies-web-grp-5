@@ -25,7 +25,6 @@ export class UsersController {
     return this.usersService.createUser(createUserDto.email, createUserDto.password, createUserDto.lastname, createUserDto.firstname, createUserDto.type);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any): Promise<User | null> {
     return this.usersService.findUserByIdWithoutPassword(id);
