@@ -9,6 +9,7 @@ import { CoursesModule } from './courses/courses.module';
 import { ChaptersModule } from './chapters/chapters.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { LoggingModule } from "./logging/logging.module";
+import { CommentsModule } from "./comments/comments.module";
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LoggingModule } from "./logging/logging.module";
     CoursesModule,
     ChaptersModule,
     QuizzesModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
