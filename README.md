@@ -11,4 +11,4 @@ Application de gestion de cours. Des professeurs créent des cours et des étudi
 à des cours. Les professeurs peuvent créer des QCM auxquels les étudiants inscrits peuvent répondre.
 
 La particularité du projet se situe dans le fait d'utiliser l'IA pour créer des résumés en quelques lignes des différents
-cours.
+cours..
