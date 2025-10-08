@@ -1,10 +1,12 @@
-import { ConflictException, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course } from './course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UsersService } from '../users/users.service';
+import { UserType } from "../users/user-type.enum";
+import { Chapter } from "../chapters/chapter.schema";
 
 @Injectable()
 export class CoursesService {
@@ -82,6 +84,49 @@ export class CoursesService {
     }
 
     return this.courseModel.findOneAndUpdate({ uuid: id }, updateCourseDto, { new: true }).exec();
+  }
+
+  async addUsersToCourse(courseId: string, userIds: string[]): Promise<Course | null> {
+    const course = await this.findCourseById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    const users: string[] = [];
+    for (const id of userIds) {
+      const user = await this.usersService.findUserById(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      if (user.type !== UserType.STUDENT) {
+        throw new ForbiddenException('Only students can be added to a course');
+      }
+      if (course.students.includes(id)) {
+        throw new ConflictException('User is already enrolled in this course');
+      }
+      users.push(id);
+    }
+    course.students.push(...users);
+    return course.save();
+  }
+
+  async removeUsersFromCourse(courseId: string, userIds: string[]): Promise<Course | null> {
+    const course = await this.findCourseById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    const users: string[] = [];
+    for (const id of userIds) {
+      const user = await this.usersService.findUserById(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      if (!course.students.includes(id)) {
+        throw new NotFoundException('User is not enrolled in this course');
+      }
+      users.push(id);
+    }
+    course.students = course.students.filter(studentId => !users.includes(studentId));
+    return course.save();
   }
 
   async findCoursesByStudent(studentId: string): Promise<Course[]> {
