@@ -8,6 +8,7 @@ import { AuthModule } from "./auth/auth.module";
 import { CoursesModule } from './courses/courses.module';
 import { ChaptersModule } from './chapters/chapters.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
+import { LoggingModule } from "./logging/logging.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
       }),
       inject: [ConfigService],
     }),
+    LoggingModule,
     UsersModule,
     AuthModule,
     CoursesModule,
