@@ -17,6 +17,7 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { Chapter } from './chapter.schema';
 import { CoursesService } from '../courses/courses.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Quiz } from "../quizzes/quiz.schema";
 
 
 @Controller('chapters')
@@ -29,10 +30,12 @@ export class ChaptersController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createChapterDto: CreateChapterDto, @Request() req: any): Promise<Chapter> {
-    // Vérifier que l'utilisateur est le créateur du cours
     const course = await this.coursesService.findCourseById(createChapterDto.courseId);
     if (!course) {
       throw new NotFoundException('Course not found');
+    }
+    if (course.creatorId !== req.user.uuid) {
+      throw new ForbiddenException('You are not allowed to add chapters to this course');
     }
     return this.chaptersService.createChapter(createChapterDto);
   }
@@ -50,21 +53,13 @@ export class ChaptersController {
     if (!chapter) {
       throw new NotFoundException('Chapter not found');
     }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
-    }
     return chapter;
   }
 
-  @Get('course/:courseId')
+  @Get(':id/quiz')
   @UseGuards(AuthGuard('jwt'))
-  async findByCourse(@Param('courseId') courseId: string, @Request() req: any): Promise<Chapter[]> {
-    const course = await this.coursesService.findCourseById(courseId);
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
-    return this.chaptersService.findChaptersByCourse(courseId);
+  async findQuizOfChapter(@Param('id') id: string): Promise<Quiz | null> {
+    return this.chaptersService.findQuizOfChapter(id);
   }
 
   @Put(':id')
@@ -73,10 +68,6 @@ export class ChaptersController {
     const chapter = await this.chaptersService.findChapterById(id);
     if (!chapter) {
       throw new NotFoundException('Chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
     }
     return this.chaptersService.updateChapter(id, updateChapterDto);
   }
@@ -87,10 +78,6 @@ export class ChaptersController {
     const chapter = await this.chaptersService.findChapterById(id);
     if (!chapter) {
       throw new NotFoundException('Chapter not found');
-    }
-    const course = await this.coursesService.findCourseById(chapter.courseId);
-    if (!course) {
-      throw new NotFoundException('Associated course not found');
     }
     return this.chaptersService.deleteChapter(id);
   }

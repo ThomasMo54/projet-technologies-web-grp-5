@@ -10,8 +10,8 @@ import { UsersModule } from '../users/users.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Quiz.name, schema: QuizSchema }]),
-    forwardRef(() => ChaptersModule), // Use forwardRef here
-    CoursesModule,
+    forwardRef(() => ChaptersModule),
+    forwardRef(() => CoursesModule),
     UsersModule,
   ],
   controllers: [QuizzesController],

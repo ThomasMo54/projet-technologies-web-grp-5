@@ -12,9 +12,8 @@ import { UsersService } from '../users/users.service';
 export class QuizzesService {
   constructor(
     @InjectModel(Quiz.name) private readonly quizModel: Model<Quiz>,
-    @Inject(forwardRef(() => ChaptersService))
-    private readonly chaptersService: ChaptersService,
-    private readonly coursesService: CoursesService,
+    @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService,
+    @Inject(forwardRef(() => CoursesService)) private readonly coursesService: CoursesService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -81,15 +80,6 @@ export class QuizzesService {
 
   async findAllQuizzes(): Promise<Quiz[]> {
     return this.quizModel.find().exec();
-  }
-
-  async findQuizzesByChapter(chapterId: string): Promise<Quiz[]> {
-    // Vérifier si le chapterId existe
-    const chapter = await this.chaptersService.findChapterById(chapterId);
-    if (!chapter) {
-      throw new NotFoundException('Chapter not found');
-    }
-    return this.quizModel.find({ chapterId }).exec();
   }
 
   async updateQuiz(id: string, updateQuizDto: UpdateQuizDto): Promise<Quiz | null> {

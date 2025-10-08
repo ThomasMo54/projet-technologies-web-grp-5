@@ -1,4 +1,11 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Course } from './course.schema';
@@ -7,12 +14,14 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { UsersService } from '../users/users.service';
 import { UserType } from "../users/user-type.enum";
 import { Chapter } from "../chapters/chapter.schema";
+import { ChaptersService } from "../chapters/chapters.service";
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectModel(Course.name) private readonly courseModel: Model<Course>,
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService
   ) {}
 
   async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
@@ -141,6 +150,21 @@ export class CoursesService {
 
     // Find courses where the studentId is in the students array
     return this.courseModel.find({ students: studentId }).exec();
+  }
+
+  async findChaptersOfCourse(courseId: string): Promise<Chapter[]> {
+    const course = await this.findCourseById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    const chapters: Chapter[] = [];
+    for (const chapterId of course.chapters) {
+      const chapter = await this.chaptersService.findChapterById(chapterId);
+      if (chapter) {
+        chapters.push(chapter);
+      }
+    }
+    return chapters;
   }
 
   async deleteCourse(id: string): Promise<Course | null> {

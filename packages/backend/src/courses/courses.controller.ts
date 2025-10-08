@@ -17,6 +17,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './course.schema';
 import { AuthGuard } from '@nestjs/passport';
 import { AddRemoveStudentsDto } from "./dto/add-remove-students.dto";
+import { Chapter } from "../chapters/chapter.schema";
 
 @Controller('courses')
 export class CoursesController {
@@ -66,6 +67,12 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'))
   async findByStudent(@Param('studentId') studentId: string, @Request() req: any): Promise<Course[]> {
     return this.coursesService.findCoursesByStudent(studentId);
+  }
+
+  @Get(':id/chapters')
+  @UseGuards(AuthGuard('jwt'))
+  async findChapters(@Param('id') id: string): Promise<Chapter[]> {
+    return this.coursesService.findChaptersOfCourse(id);
   }
 
   @Put(':id')
