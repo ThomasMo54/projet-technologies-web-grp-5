@@ -3,7 +3,7 @@ import type { IQuiz } from '../interfaces/quiz';
 import type { CreateQuizDto, UpdateQuizDto } from '../interfaces/quiz';
 
 export const fetchQuizzesByChapter = async (chapterId: string): Promise<IQuiz[]> => {
-  const response = await api.get(`/quizzes/chapter/${chapterId}`);
+  const response = await api.get(`/chapter/${chapterId}/quiz`);
   return response.data;
 };
 

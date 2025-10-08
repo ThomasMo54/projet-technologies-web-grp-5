@@ -3,7 +3,7 @@ import type { IChapter } from '../interfaces/chapter';
 import type { CreateChapterDto, UpdateChapterDto } from '../interfaces/chapter';
 
 export const fetchChaptersByCourse = async (courseId: string): Promise<IChapter[]> => {
-  const response = await api.get(`/chapters/course/${courseId}`);
+  const response = await api.get(`/courses/${courseId}/chapters`);
   return response.data;
 };
 
