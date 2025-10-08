@@ -114,6 +114,11 @@ export class ChaptersService {
       });
     }
 
+    // Supprimer le quiz associé (si existant)
+    if (chapter.quizId) {
+      await this.quizzesService.deleteQuiz(chapter.quizId);
+    }
+
     return this.chapterModel.findOneAndDelete({ uuid: id }).exec();
   }
 }

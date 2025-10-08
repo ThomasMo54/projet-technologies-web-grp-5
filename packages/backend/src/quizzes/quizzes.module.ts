@@ -12,7 +12,7 @@ import { UsersModule } from '../users/users.module';
     MongooseModule.forFeature([{ name: Quiz.name, schema: QuizSchema }]),
     forwardRef(() => ChaptersModule),
     forwardRef(() => CoursesModule),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService],

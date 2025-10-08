@@ -22,6 +22,12 @@ export class User extends Document {
 
   @Prop({ required: true, enum: UserType })
   type: UserType;
+
+  @Prop({ type: [String], default: [] })
+  courses: string[];
+
+  @Prop({ type: [String], default: [] })
+  enrolledCourses: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

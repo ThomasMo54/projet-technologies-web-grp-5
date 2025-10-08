@@ -9,7 +9,7 @@ import { ChaptersModule } from "../chapters/chapters.module";
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Course.name, schema: CourseSchema }]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => ChaptersModule),
   ],
   controllers: [CoursesController], // Vérifie que CoursesController est ici

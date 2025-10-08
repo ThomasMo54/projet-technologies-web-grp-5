@@ -20,7 +20,7 @@ import { ChaptersService } from "../chapters/chapters.service";
 export class CoursesService {
   constructor(
     @InjectModel(Course.name) private readonly courseModel: Model<Course>,
-    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => UsersService)) private readonly usersService: UsersService,
     @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService
   ) {}
 
@@ -112,6 +112,7 @@ export class CoursesService {
       if (course.students.includes(id)) {
         throw new ConflictException('User is already enrolled in this course');
       }
+      await this.usersService.enrollUserInCourse(id, courseId);
       users.push(id);
     }
     course.students.push(...users);
@@ -132,6 +133,7 @@ export class CoursesService {
       if (!course.students.includes(id)) {
         throw new NotFoundException('User is not enrolled in this course');
       }
+      await this.usersService.unenrollUserFromCourse(id, courseId);
       users.push(id);
     }
     course.students = course.students.filter(studentId => !users.includes(studentId));
@@ -168,6 +170,14 @@ export class CoursesService {
   }
 
   async deleteCourse(id: string): Promise<Course | null> {
+    const course = await this.findCourseById(id);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    // Supprimer les chapitres associés au cours
+    for (const chapterId of course.chapters) {
+      await this.chaptersService.deleteChapter(chapterId);
+    }
     return this.courseModel.findOneAndDelete({ uuid: id }).exec();
   }
 }

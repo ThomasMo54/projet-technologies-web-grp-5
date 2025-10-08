@@ -15,6 +15,7 @@ import { User } from './user.schema';
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthGuard } from "@nestjs/passport";
+import { Course } from "../courses/course.schema";
 
 @Controller('users')
 export class UsersController {
@@ -28,6 +29,16 @@ export class UsersController {
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any): Promise<User | null> {
     return this.usersService.findUserByIdWithoutPassword(id);
+  }
+
+  @Get(':id/courses')
+  async findUserCourses(@Param('id') id: string, @Request() req: any): Promise<Course[]> {
+    return this.usersService.findUserCourses(id);
+  }
+
+  @Get(':id/enrolled-courses')
+  async findUserEnrolledCourses(@Param('id') id: string, @Request() req: any): Promise<Course[]> {
+    return this.usersService.findUserEnrolledCourses(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
