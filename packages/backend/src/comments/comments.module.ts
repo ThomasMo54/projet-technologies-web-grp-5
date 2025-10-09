@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CoursesModule } from "../courses/courses.module";
-import { CommentSchema } from "./comment.schema";
+import { Comment, CommentSchema } from "./comment.schema";
 import { CommentsController } from "./comments.controller";
 import { CommentsService } from "./comments.service";
 

@@ -23,4 +23,7 @@ export class CreateCourseDto {
 
   @IsString({ each: true })
   students?: string[];
+
+  @IsString({ each: true })
+  comments?: string[];
 }

@@ -24,6 +24,9 @@ export class Course extends Document {
 
   @Prop({ type: [{ type: String }], default: [] })
   students: string[]; // Liste des UUIDs des étudiants inscrits
+
+  @Prop({ type: [{ type: String }], default: [] })
+  comments: string[];
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
