@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from "class-validator";
+import { IsString, MaxLength, ValidateIf } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateChapterDto {
@@ -15,5 +15,6 @@ export class CreateChapterDto {
   courseId: string;
 
   @IsString()
-  quizId?: string;
+  @ValidateIf((object, value) => value !== undefined)
+  quizId: string | undefined;
 }

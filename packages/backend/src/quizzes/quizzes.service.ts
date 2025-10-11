@@ -7,11 +7,14 @@ import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { ChaptersService } from '../chapters/chapters.service';
 import { CoursesService } from '../courses/courses.service';
 import { UsersService } from '../users/users.service';
+import { CreateQuizAnswerDto } from "./dto/create-quiz-answer.dto";
+import { QuizAnswer } from "./quiz-answer.schema";
 
 @Injectable()
 export class QuizzesService {
   constructor(
     @InjectModel(Quiz.name) private readonly quizModel: Model<Quiz>,
+    @InjectModel(QuizAnswer.name) private readonly quizAnswerModel: Model<QuizAnswer>,
     @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService,
     @Inject(forwardRef(() => CoursesService)) private readonly coursesService: CoursesService,
     private readonly usersService: UsersService,
@@ -74,12 +77,42 @@ export class QuizzesService {
     return savedQuiz;
   }
 
+  async submitQuizAnswer(createQuizAnswerDto: CreateQuizAnswerDto): Promise<QuizAnswer> {
+    // Récupérer le quiz pour vérifier les réponses
+    const quiz = await this.findQuizById(createQuizAnswerDto.quizId);
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+    // Vérifier si l'utilisateur a déjà soumis une réponse pour ce quiz
+    const existingAnswer = await this.quizAnswerModel.findOne({ quizId: createQuizAnswerDto.quizId, userId: createQuizAnswerDto.userId }).exec();
+    if (existingAnswer) {
+      throw new ConflictException('You have already submitted an answer for this quiz');
+    }
+    // Vérifier que le nombre de réponses correspond au nombre de questions
+    if (createQuizAnswerDto.answers.length !== quiz.questions.length) {
+      throw new BadRequestException('Number of answers does not match number of questions');
+    }
+    // Calculer le score
+    let score = quiz.questions.filter((question, index) => question.correctOption === createQuizAnswerDto.answers[index]).length;
+    // Enregistrer la réponse
+    const newQuizAnswer = new this.quizAnswerModel({ ...createQuizAnswerDto, score });
+    return newQuizAnswer.save();
+  }
+
   async findQuizById(id: string): Promise<Quiz | null> {
     return this.quizModel.findOne({ uuid: id }).exec();
   }
 
   async findAllQuizzes(): Promise<Quiz[]> {
     return this.quizModel.find().exec();
+  }
+
+  async findUserQuizAnswer(quizId: string, userId: string): Promise<QuizAnswer | null> {
+    return this.quizAnswerModel.findOne({ quizId, userId }).exec();
+  }
+
+  async findAllAnswersForQuiz(quizId: string): Promise<QuizAnswer[]> {
+    return this.quizAnswerModel.find({ quizId }).exec();
   }
 
   async updateQuiz(id: string, updateQuizDto: UpdateQuizDto): Promise<Quiz | null> {
@@ -121,6 +154,8 @@ export class QuizzesService {
         ) {
           throw new BadRequestException('Correct option index is invalid');
         }
+        // Supprimer toutes les réponses associées à ce quiz
+        await this.quizAnswerModel.deleteMany({ quizId: id }).exec();
       }
     }
 
@@ -138,6 +173,9 @@ export class QuizzesService {
     if (chapter && chapter.quizId === id) {
       await this.chaptersService.updateChapter(quiz.chapterId, { quizId: "" });
     }
+
+    // Supprimer toutes les réponses associées à ce quiz
+    await this.quizAnswerModel.deleteMany({ quizId: id }).exec();
 
     return this.quizModel.findOneAndDelete({ uuid: id }).exec();
   }

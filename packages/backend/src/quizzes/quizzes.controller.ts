@@ -1,23 +1,23 @@
 import {
+  Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
+  NotFoundException,
+  Param,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
   Request,
-  ForbiddenException,
-  NotFoundException
+  UseGuards
 } from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { Quiz } from './quiz.schema';
-import { ChaptersService } from '../chapters/chapters.service';
-import { CoursesService } from '../courses/courses.service';
 import { AuthGuard } from '@nestjs/passport';
+import { QuizAnswer } from "./quiz-answer.schema";
+import { CreateQuizAnswerDto } from "./dto/create-quiz-answer.dto";
 
 
 @Controller('quizzes')
@@ -29,7 +29,19 @@ export class QuizzesController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
+    if (req.user.uuid !== createQuizDto.creatorId) {
+      throw new NotFoundException('You are not allowed to create a quiz for another user');
+    }
     return this.quizzesService.createQuiz(createQuizDto);
+  }
+
+  @Post(':id/answers')
+  @UseGuards(AuthGuard('jwt'))
+  async createAnswer(@Param('id') id: string, @Body() createQuizAnswerDto: CreateQuizAnswerDto): Promise<QuizAnswer> {
+    if (id !== createQuizAnswerDto.quizId) {
+      throw new NotFoundException('Quiz ID in the URL does not match the body');
+    }
+    return await this.quizzesService.submitQuizAnswer(createQuizAnswerDto);
   }
 
   @Get()
@@ -40,12 +52,32 @@ export class QuizzesController {
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'))
-  async findOne(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
+  async findOne(@Param('id') id: string): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
     }
     return quiz;
+  }
+
+  @Get(':id/answers/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async findUserAnswer(@Param('id') id: string, @Param('userId') userId: string): Promise<QuizAnswer | null> {
+    const quiz = await this.quizzesService.findQuizById(id);
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+    return await this.quizzesService.findUserQuizAnswer(id, userId);
+  }
+
+  @Get(':id/answers')
+  @UseGuards(AuthGuard('jwt'))
+  async findAllAnswers(@Param('id') id: string): Promise<QuizAnswer[]> {
+    const quiz = await this.quizzesService.findQuizById(id);
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+    return await this.quizzesService.findAllAnswersForQuiz(id);
   }
 
   @Put(':id')
@@ -54,6 +86,9 @@ export class QuizzesController {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
+    }
+    if (quiz.creatorId !== req.user.uuid) {
+      throw new ForbiddenException('You are not allowed to update this quiz');
     }
     return this.quizzesService.updateQuiz(id, updateQuizDto);
   }
@@ -64,6 +99,9 @@ export class QuizzesController {
     const quiz = await this.quizzesService.findQuizById(id);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
+    }
+    if (quiz.creatorId !== req.user.uuid) {
+      throw new ForbiddenException('You are not allowed to delete this quiz');
     }
     return this.quizzesService.deleteQuiz(id);
   }
