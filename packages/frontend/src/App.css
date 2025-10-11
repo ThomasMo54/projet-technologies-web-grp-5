@@ -1,9 +1,28 @@
-@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 #root {
-  max-width: 1280px;
+  max-width: 100%; /* Ou max-w-7xl si vous utilisez Tailwind classes ailleurs */
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem; /* Réduit pour plus d'espace sur mobile, augmentez à 2rem si besoin */
   text-align: center;
+}
+
+/* Ajout pour Quill en dark mode (optionnel, pour mieux supporter le thème sombre) */
+.ql-editor {
+  min-height: 200px;
+}
+
+.dark .ql-editor {
+  color: #e5e7eb; /* text-gray-100 */
+  background-color: #1f2937; /* bg-gray-800 */
+}
+
+.dark .ql-toolbar {
+  background-color: #1f2937;
+  border-color: #374151;
 }
 
 .logo {
