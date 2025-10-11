@@ -15,13 +15,16 @@ import { UsersService } from '../users/users.service';
 import { UserType } from "../users/user-type.enum";
 import { Chapter } from "../chapters/chapter.schema";
 import { ChaptersService } from "../chapters/chapters.service";
+import { CommentsService } from "../comments/comments.service";
+import { Comment } from "../comments/comment.schema";
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectModel(Course.name) private readonly courseModel: Model<Course>,
-    private readonly usersService: UsersService,
-    @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService
+    @Inject(forwardRef(() => UsersService)) private readonly usersService: UsersService,
+    @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService,
+    @Inject(forwardRef(() => CommentsService)) private readonly commentsService: CommentsService,
   ) {}
 
   async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
@@ -112,6 +115,7 @@ export class CoursesService {
       if (course.students.includes(id)) {
         throw new ConflictException('User is already enrolled in this course');
       }
+      await this.usersService.enrollUserInCourse(id, courseId);
       users.push(id);
     }
     course.students.push(...users);
@@ -132,6 +136,7 @@ export class CoursesService {
       if (!course.students.includes(id)) {
         throw new NotFoundException('User is not enrolled in this course');
       }
+      await this.usersService.unenrollUserFromCourse(id, courseId);
       users.push(id);
     }
     course.students = course.students.filter(studentId => !users.includes(studentId));
@@ -167,7 +172,34 @@ export class CoursesService {
     return chapters;
   }
 
+  async findCommentsOfCourse(courseId: string) : Promise<Comment[]> {
+    const course = await this.findCourseById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    const comments: Comment[] = [];
+    for (const commentId of course.comments) {
+      const comment = await this.commentsService.findCommentById(commentId);
+      if (comment) {
+        comments.push(comment);
+      }
+    }
+    return comments;
+  }
+
   async deleteCourse(id: string): Promise<Course | null> {
+    const course = await this.findCourseById(id);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    // Supprimer les chapitres associés au cours
+    for (const chapterId of course.chapters) {
+      await this.chaptersService.deleteChapter(chapterId);
+    }
+    // Supprimer les commentaires associés au cours
+    for (const commentId of course.comments) {
+      await this.commentsService.deleteComment(commentId);
+    }
     return this.courseModel.findOneAndDelete({ uuid: id }).exec();
   }
 }

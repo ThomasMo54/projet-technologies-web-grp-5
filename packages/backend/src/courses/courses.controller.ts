@@ -18,6 +18,7 @@ import { Course } from './course.schema';
 import { AuthGuard } from '@nestjs/passport';
 import { AddRemoveStudentsDto } from "./dto/add-remove-students.dto";
 import { Chapter } from "../chapters/chapter.schema";
+import { Comment } from "../comments/comment.schema";
 
 @Controller('courses')
 export class CoursesController {
@@ -46,7 +47,7 @@ export class CoursesController {
       throw new NotFoundException('Course not found');
     }
     if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
-      throw new NotFoundException('You are not allowed to access this course');
+      throw new ForbiddenException('You are not allowed to access this course');
     }
     return course;
   }
@@ -73,6 +74,12 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'))
   async findChapters(@Param('id') id: string): Promise<Chapter[]> {
     return this.coursesService.findChaptersOfCourse(id);
+  }
+
+  @Get(':id/comments')
+  @UseGuards(AuthGuard('jwt'))
+  async findComments(@Param('id') id: string): Promise<Comment[]> {
+    return this.coursesService.findCommentsOfCourse(id);
   }
 
   @Put(':id')

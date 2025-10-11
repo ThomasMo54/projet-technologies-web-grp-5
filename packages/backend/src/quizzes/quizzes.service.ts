@@ -14,7 +14,7 @@ export class QuizzesService {
     @InjectModel(Quiz.name) private readonly quizModel: Model<Quiz>,
     @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService,
     @Inject(forwardRef(() => CoursesService)) private readonly coursesService: CoursesService,
-    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => UsersService)) private readonly usersService: UsersService,
   ) {}
 
   async createQuiz(createQuizDto: CreateQuizDto): Promise<Quiz> {
