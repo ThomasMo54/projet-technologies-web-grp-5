@@ -6,7 +6,7 @@ import { ApiProperty } from "@nestjs/swagger";
 export class CreateQuizDto {
   @IsString()
   @MaxLength(200)
-  @ApiProperty({ example: 'Database Quizz' })
+  @ApiProperty({ example: 'Database Quiz' })
   title: string;
 
   @ValidateNested({ each: true })

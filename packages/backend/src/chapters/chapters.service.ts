@@ -23,14 +23,6 @@ export class ChaptersService {
       throw new NotFoundException('Course not found');
     }
 
-    // Vérifier si le quizId existe (si fourni)
-    if (createChapterDto.quizId) {
-      const quiz = await this.quizzesService.findQuizById(createChapterDto.quizId);
-      if (!quiz) {
-        throw new NotFoundException('Quiz not found');
-      }
-    }
-
     // Vérifier si un chapitre avec le même titre existe dans le même cours
     const existingChapter = await this.chapterModel
       .findOne({ title: createChapterDto.title, courseId: createChapterDto.courseId })
