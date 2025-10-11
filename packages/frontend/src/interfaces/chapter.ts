@@ -6,7 +6,6 @@ export interface IChapter {
   content?: string;
   courseId: string;
   quizId?: string;
-  quizzes?: IQuiz[];
 }
 
 export interface CreateChapterDto {
