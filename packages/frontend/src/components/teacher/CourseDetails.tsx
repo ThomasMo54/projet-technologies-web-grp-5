@@ -13,7 +13,16 @@ import Modal from '../common/Modal';
 import ChapterForm from '../forms/ChapterForm';
 import { toast } from 'react-toastify';
 import Button from '../common/Button';
-import { PlusCircle } from 'lucide-react';
+import { 
+  PlusCircle, 
+  BookOpen, 
+  Users, 
+  MessageCircle, 
+  BarChart3,
+  Calendar,
+  Award,
+  TrendingUp
+} from 'lucide-react';
 
 const CourseDetails: React.FC = () => {
   const { courseId } = useParams();
@@ -43,87 +52,157 @@ const CourseDetails: React.FC = () => {
   const handleSuccess = () => {
     refetch();
     handleClose();
-    toast.success('Chapter added!');
-
+    toast.success('✅ Chapitre ajouté avec succès!');
   };
 
   if (isLoading) return <Loader />;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Course Info Card */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{course?.title}</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{course?.description || 'No description available'}</p>
-          {course?.tags && course.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {course.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
+        
+        {/* Hero Section - Course Header */}
+        <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          
+          <div className="relative p-8 md:p-10">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                    <BookOpen size={32} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                      {course?.title}
+                    </h1>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        Créé le {new Date(Date.now()).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                  {course?.description || 'Aucune description disponible pour ce cours.'}
+                </p>
+
+                {course?.tags && course.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {course.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-full border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all duration-200"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <BookOpen size={24} />
+                  <TrendingUp size={20} className="opacity-70" />
+                </div>
+                <div className="text-3xl font-bold mb-1">{chapters?.length || 0}</div>
+                <div className="text-blue-100 text-sm font-medium">Chapitres</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <Users size={24} />
+                  <Award size={20} className="opacity-70" />
+                </div>
+                <div className="text-3xl font-bold mb-1">{students?.length || 0}</div>
+                <div className="text-purple-100 text-sm font-medium">Étudiants inscrits</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <MessageCircle size={24} />
+                  <BarChart3 size={20} className="opacity-70" />
+                </div>
+                <div className="text-3xl font-bold mb-1">{comments?.length || 0}</div>
+                <div className="text-pink-100 text-sm font-medium">Commentaires</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
+
+        {/* Chapters Section */}
+        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <BookOpen size={24} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Chapitres</h3>
+              </div>
+              <Button
+                onClick={handleAddChapter}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg py-2.5 px-5 shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <PlusCircle size={20} />
+                Ajouter un chapitre
+              </Button>
+            </div>
+            <ChapterList chapters={chapters || []} courseId={courseId!} />
+          </div>
+        </section>
+
+        {/* Enrolled Students Section */}
+        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <Users size={24} className="text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Étudiants inscrits</h3>
+            </div>
+            <StudentList students={students || []} />
+          </div>
+        </section>
+
+        {/* Comments Section */}
+        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                <MessageCircle size={24} className="text-pink-600 dark:text-pink-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Commentaires</h3>
+            </div>
+            <CommentList comments={comments || []} courseId={courseId!} />
+          </div>
+        </section>
+
+        {/* Statistics Section */}
+        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <BarChart3 size={24} className="text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Statistiques</h3>
+            </div>
+            <StatsChart courseId={courseId!} />
+          </div>
+        </section>
       </div>
 
-      {/* Chapters Section */}
-      <section className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Chapters</h3>
-            <Button
-              onClick={handleAddChapter}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg py-2 px-4 shadow-md hover:shadow-lg"
-            >
-              <PlusCircle size={20} />
-              Add Chapter
-            </Button>
-          </div>
-          <ChapterList chapters={chapters || []} courseId={courseId!} />
-        </div>
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
-      </section>
-
-       {/* Enrolled Students Section */}
-      <section className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Enrolled Students</h3>
-          <StudentList students={students || []} />
-        </div>
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
-      </section>
-
-
-      {/* Comments Section */}
-      <section className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Comments</h3>
-          <CommentList comments={comments || []} courseId={courseId!} />
-        </div>
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
-      </section>
-
-      {/* Statistics Section */}
-      <section className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Statistics</h3>
-          <StatsChart courseId={courseId!} />
-        </div>
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
-      </section>
-
-      <Modal isOpen={addChapterModalOpen} onClose={handleClose} title="Add Chapter">
+      <Modal isOpen={addChapterModalOpen} onClose={handleClose} title="Ajouter un chapitre" width="5xl">
         <ChapterForm courseId={courseId!} onSuccess={handleSuccess} />
       </Modal>
     </div>

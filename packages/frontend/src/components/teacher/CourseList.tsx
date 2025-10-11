@@ -85,10 +85,10 @@ const CourseList: React.FC = () => {
         </div>
       )}
       
-      <Modal isOpen={editModalOpen} onClose={handleClose} title="Edit Course">
+      <Modal isOpen={editModalOpen} onClose={handleClose} title="Edit Course" width="4xl">
         {selectedCourse && <CourseForm course={selectedCourse} onSuccess={handleSuccess} />}
       </Modal>
-      <Modal isOpen={createModalOpen} onClose={handleClose} title="Create Course">
+      <Modal isOpen={createModalOpen} onClose={handleClose} title="Create Course" width="4xl">
         <CourseForm onSuccess={handleSuccess} creatorId={user!.id} />
       </Modal>
     </div>

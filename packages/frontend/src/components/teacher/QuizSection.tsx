@@ -275,6 +275,7 @@ const QuizSection: React.FC<QuizSectionProps> = ({ courseId, chapterId }) => {
         isOpen={modalOpen} 
         onClose={handleClose} 
         title={isEdit ? 'Modifier le quiz' : 'Ajouter un quiz'}
+        width="3xl"
       >
         <QuizForm 
           courseId={courseId} 
@@ -289,6 +290,7 @@ const QuizSection: React.FC<QuizSectionProps> = ({ courseId, chapterId }) => {
         isOpen={viewingQuiz} 
         onClose={handleCloseViewer} 
         title={quiz?.title || 'Quiz'}
+        width="3xl"
       >
         {quiz && <QuizViewer quiz={quiz} onClose={handleCloseViewer} />}
       </Modal>

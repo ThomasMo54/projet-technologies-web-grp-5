@@ -25,13 +25,21 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this chapter?')) return;
+    const isConfirmed = window.confirm(
+      'Are you sure you want to delete this chapter? This action cannot be undone.'
+    );
     
+    if (!isConfirmed) {
+      toast.info('Deletion cancelled');
+      return;
+    }
+
     try {
       await deleteChapter(id);
       queryClient.invalidateQueries({ queryKey: ['chapters', courseId] });
       toast.success('Chapter deleted successfully!');
     } catch (error) {
+      console.error('Error deleting chapter:', error);
       toast.error('Failed to delete chapter');
     }
   };
@@ -61,10 +69,13 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   {chapter.title}
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {chapter.content || 'No content available'}
-                </p>
-                
+
+                {/* Affichage du contenu HTML */}
+                <div 
+                  className="prose prose-sm dark:prose-invert max-w-none mb-4 text-gray-700 dark:text-gray-300"
+                  dangerouslySetInnerHTML={{ __html: chapter.content || '<p>No content available</p>' }}
+                />
+
                 <div className="flex flex-col sm:flex-row gap-2 mb-4">
                   <Button
                     onClick={() => handleEdit(chapter)}
@@ -81,8 +92,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
                     Delete
                   </Button>
                 </div>
-                
-                {/* Quiz Section - Un seul quiz par chapitre */}
+
                 <QuizSection courseId={courseId} chapterId={chapter.uuid} />
               </div>
               <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-lg transition-all duration-300 pointer-events-none"></div>
@@ -94,8 +104,8 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
           </div>
         )}
       </ul>
-      
-      <Modal isOpen={editModalOpen} onClose={handleClose} title="Edit Chapter">
+
+      <Modal isOpen={editModalOpen} onClose={handleClose} title="Edit Chapter" width="5xl">
         {selectedChapter && (
           <ChapterForm 
             courseId={courseId} 

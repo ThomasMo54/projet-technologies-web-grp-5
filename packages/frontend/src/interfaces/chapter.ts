@@ -1,4 +1,3 @@
-import type { IQuiz } from './quiz';
 
 export interface IChapter {
   uuid: string;
