@@ -47,6 +47,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
         ? data.chapters.split(',').map(id => id.trim()).filter(id => id.length > 0)
         : [];
 
+        
       if (course) {
         // Mode édition
         const updateData: UpdateCourseDto = {
@@ -55,6 +56,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           tags: tagsArray,
           students: studentsArray,
           chapters: chaptersArray,
+          comments:[]
         };
         await updateCourse(course.uuid, updateData);
       } else {
@@ -69,7 +71,8 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           tags: tagsArray,
           students: studentsArray,
           creatorId: creatorId,
-          chapters: chaptersArray.length > 0 ? chaptersArray : [], // Tableau vide si pas de chapitres
+          chapters: chaptersArray.length > 0 ? chaptersArray : [], 
+          comments: [],
         };
         await createCourse(createData);
       }

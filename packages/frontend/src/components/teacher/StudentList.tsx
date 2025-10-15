@@ -7,6 +7,9 @@ interface StudentListProps {
 }
 
 const StudentList: React.FC<StudentListProps> = ({ students }) => {
+  // Log temporaire pour debug : Vérifiez la structure dans la console
+  console.log('Students data:', students);
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
@@ -21,9 +24,9 @@ const StudentList: React.FC<StudentListProps> = ({ students }) => {
           {/* Student List */}
           {students.length > 0 ? (
             <div className="space-y-3">
-              {students.map((student) => (
+              {students.map((student, index) => (
                 <div
-                  key={student.id}
+                  key={student.id || index}  // Priorité à id ; fallback index si absent (à éviter en prod)
                   className="relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-all duration-200 hover:shadow-md"
                 >
                   <div className="flex items-center gap-3">

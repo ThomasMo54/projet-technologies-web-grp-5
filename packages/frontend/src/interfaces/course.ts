@@ -1,4 +1,5 @@
 import type { IChapter } from './chapter';
+import type { IComment } from './comment';
 
 export interface ICourse {
   _id: string;
@@ -9,6 +10,7 @@ export interface ICourse {
   tags?: string[];
   creatorId: string;
   students?: string[];
+  comments?: IComment[];
 }
 
 export interface CreateCourseDto {
@@ -18,6 +20,7 @@ export interface CreateCourseDto {
   tags?: string[];
   creatorId: string;
   students?: string[];
+  comments?: string[];
 }
 
 export interface UpdateCourseDto {
@@ -27,4 +30,5 @@ export interface UpdateCourseDto {
   tags?: string[];
   creatorId?: string;
   students?: string[];
+  comments?: string[];
 }

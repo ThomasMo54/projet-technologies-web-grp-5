@@ -17,6 +17,9 @@ import { Chapter } from "../chapters/chapter.schema";
 import { ChaptersService } from "../chapters/chapters.service";
 import { CommentsService } from "../comments/comments.service";
 import { Comment } from "../comments/comment.schema";
+import { Quiz } from '../quizzes/quiz.schema';  
+import { QuizAnswer } from '../quizzes/quiz-answer.schema'; 
+import { User } from '../users/user.schema';  
 
 @Injectable()
 export class CoursesService {
@@ -25,6 +28,9 @@ export class CoursesService {
     @Inject(forwardRef(() => UsersService)) private readonly usersService: UsersService,
     @Inject(forwardRef(() => ChaptersService)) private readonly chaptersService: ChaptersService,
     @Inject(forwardRef(() => CommentsService)) private readonly commentsService: CommentsService,
+    @InjectModel(Quiz.name) private quizModel: Model<Quiz>,
+    @InjectModel(QuizAnswer.name) private quizAnswerModel: Model<QuizAnswer>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
@@ -202,4 +208,57 @@ export class CoursesService {
     }
     return this.courseModel.findOneAndDelete({ uuid: id }).exec();
   }
+
+  
+  async getCourseStats(courseId: string) {
+  const course = await this.findCourseById(courseId);
+  if (!course) {
+    throw new NotFoundException('Course not found');
+  }
+
+  // Étape 1: Fetch tous les quizzes du cours (via chapters)
+  const chapters = await this.findChaptersOfCourse(courseId);
+  const quizIds = chapters.map(ch => ch.quizId).filter(Boolean);
+  if (quizIds.length === 0) {
+    return [];  // Pas de quizzes → pas de stats
+  }
+
+  // Étape 2: Pour chaque étudiant inscrit, calculer moyenne score sur quizzes
+  const stats = await Promise.all(
+    course.students.map(async (studentId) => {
+      // Fetch toutes les réponses de cet étudiant pour ces quizzes
+      const answers = await this.quizAnswerModel
+        .find({ quizId: { $in: quizIds }, userId: studentId })
+        .select('score')
+        .lean();
+
+      if (answers.length === 0) {
+        return null;  // Skip si pas de réponses
+      }
+
+      const averageScore = answers.reduce((sum, ans) => sum + ans.score, 0) / answers.length;
+
+      // FIX: Use findOne with uuid instead of findById
+      const student = await this.userModel
+        .findOne({ uuid: studentId })
+        .select('firstname lastname')
+        .lean();
+      
+      const name = student 
+        ? `${student.firstname} ${student.lastname}` 
+        : `Étudiant ${studentId.slice(-4)}`;
+
+      return {
+        name,
+        studentId,
+        progress: Math.round(averageScore * 100),  // Convert to %
+        completedQuizzes: answers.length,
+        totalQuizzes: quizIds.length,
+      };
+    })
+  );
+
+  // Filtre les null (étudiants sans réponses)
+  return stats.filter(Boolean);
+}
 }
