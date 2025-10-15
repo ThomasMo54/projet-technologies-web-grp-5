@@ -7,6 +7,7 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { CoursesService } from '../courses/courses.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
 import { Quiz } from "../quizzes/quiz.schema";
+import { OllamaService } from "../ollama/ollama.service";
 
 @Injectable()
 export class ChaptersService {
@@ -14,6 +15,7 @@ export class ChaptersService {
     @InjectModel(Chapter.name) private readonly chapterModel: Model<Chapter>,
     @Inject(forwardRef(() => CoursesService)) private readonly coursesService: CoursesService,
     @Inject(forwardRef(() => QuizzesService)) private readonly quizzesService: QuizzesService,
+    private readonly ollamaService: OllamaService,
   ) {}
 
   async createChapter(createChapterDto: CreateChapterDto): Promise<Chapter> {
@@ -33,6 +35,10 @@ export class ChaptersService {
 
     const newChapter = new this.chapterModel(createChapterDto);
     const savedChapter = await newChapter.save();
+
+    this.ollamaService.generateSummary(createChapterDto.content ?? '').then((summary) => {
+      this.chapterModel.findOneAndUpdate({ uuid: savedChapter.uuid }, { summary }).exec();
+    });
 
     // Ajouter le chapitre à la liste des chapitres du cours
     await this.coursesService.updateCourse(createChapterDto.courseId, {
@@ -88,6 +94,10 @@ export class ChaptersService {
         throw new ConflictException('Chapter with this title already exists in this course');
       }
     }
+
+    this.ollamaService.generateSummary(updateChapterDto.content ?? '').then((summary) => {
+      this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
+    });
 
     return this.chapterModel.findOneAndUpdate({ uuid: id }, updateChapterDto, { new: true }).exec();
   }
