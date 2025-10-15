@@ -7,9 +7,6 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import { useAuth } from './hooks/useAuth';
 import NotFound from './pages/NotFound';
 
-
-
-
 const queryClient = new QueryClient();
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role: 'teacher' | 'student' }> = ({ children, role }) => {
@@ -28,7 +25,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/teacher/*" element={<PrivateRoute role="teacher"><TeacherDashboard /></PrivateRoute>} />

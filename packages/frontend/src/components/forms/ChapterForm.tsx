@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,8 +7,8 @@ import Button from '../common/Button';
 import type { CreateChapterDto, UpdateChapterDto, IChapter } from '../../interfaces/chapter';
 import { toast } from 'react-toastify';
 import { FileText, Book } from 'lucide-react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css'; 
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
 // Schémas Zod
 const createChapterSchema = z.object({
@@ -43,7 +43,49 @@ const ChapterForm: React.FC<ChapterFormProps> = ({ courseId, chapter, onSuccess 
       : { courseId, title: '', content: '', quizId: '' },
   });
 
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<Quill | null>(null);
   const content = watch('content');
+
+  // Initialiser Quill directement
+  useEffect(() => {
+    if (editorRef.current && !quillRef.current) {
+      const quill = new Quill(editorRef.current, {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            ['link', 'image'],
+            ['clean']
+          ],
+        },
+        placeholder: 'Write your chapter content with formatting...',
+      });
+
+      // Initialiser le contenu
+      if (content) {
+        quill.root.innerHTML = content;
+      }
+
+      // Écouter les changements
+      quill.on('text-change', () => {
+        setValue('content', quill.root.innerHTML);
+      });
+
+      quillRef.current = quill;
+    }
+  }, []);
+
+  // Mettre à jour le contenu si il change de l'extérieur
+  useEffect(() => {
+    if (quillRef.current && content !== quillRef.current.root.innerHTML) {
+      quillRef.current.root.innerHTML = content || '';
+    }
+  }, [content]);
 
   const onSubmit = async (data: ChapterFormData) => {
     try {
@@ -57,25 +99,6 @@ const ChapterForm: React.FC<ChapterFormProps> = ({ courseId, chapter, onSuccess 
       toast.error('Failed to save chapter');
     }
   };
-
-  // Configuration de React-Quill
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  };
-
-  const formats = [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'color', 'background', 'list', 'bullet', 'indent',
-    'link', 'image'
-  ];
 
   return (
     <div className="relative max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
@@ -103,15 +126,11 @@ const ChapterForm: React.FC<ChapterFormProps> = ({ courseId, chapter, onSuccess 
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Content
           </label>
-          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-            <ReactQuill
-              theme="snow"
-              value={content || ''}
-              onChange={(value) => setValue('content', value)}
-              modules={modules}
-              formats={formats}
-              className="h-64 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              placeholder="Write your chapter content with formatting..."
+          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-700">
+            <div 
+              ref={editorRef} 
+              className="h-64"
+              style={{ minHeight: '256px' }}
             />
           </div>
           {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content.message}</p>}

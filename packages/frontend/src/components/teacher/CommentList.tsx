@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { IComment } from '../../interfaces/comment';
-import { addComment } from '../../api/comments';
+import { addComment, deleteComment } from '../../api/comments';
 import { toast } from 'react-toastify';
 import { formatDate } from '../../utils/formatDate';
-import { MessageCircle, Send, Heart, User, Smile } from 'lucide-react';
+import { MessageCircle, Send, Heart, User, Smile, Trash2 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';  // Ajoutez ce hook
 
 interface CommentListProps {
   comments: IComment[];
@@ -13,9 +14,16 @@ interface CommentListProps {
 
 const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();  // Récupère l'userId connecté
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const userId = user?.id;  // Récupère l'ID de l'utilisateur connecté
+  if (!userId) {
+    // Optionnel : Rediriger ou afficher un message si non connecté
+    return <p className="text-gray-500">Connectez-vous pour commenter.</p>;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +31,45 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
 
     setIsSubmitting(true);
     try {
-      await addComment(courseId, newComment.trim());
+      await addComment(courseId, newComment.trim(), userId);  // Envoie userId
       setNewComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
       toast.success('💬 Commentaire ajouté!');
-    } catch (error) {
-      toast.error('Échec de l\'ajout du commentaire');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast.error('❌ Vous ne pouvez créer que vos propres commentaires');
+      } else {
+        toast.error('Échec de l\'ajout du commentaire');
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (commentId: string, commentUserId: string) => {
+    if (commentUserId !== userId) {
+      toast.error('❌ Vous ne pouvez supprimer que vos propres commentaires');
+      return;
+    }
+
+    const isConfirmed = window.confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?');
+    if (!isConfirmed) return;
+
+    setDeletingId(commentId);
+    try {
+      await deleteComment(commentId);
+      queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
+      toast.success('🗑️ Commentaire supprimé !');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast.error('❌ Vous ne pouvez supprimer que vos propres commentaires');
+      } else if (error.response?.status === 404) {
+        toast.error('❌ Commentaire introuvable');
+      } else {
+        toast.error('Échec de la suppression');
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -110,7 +149,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
         {comments.length > 0 ? (
           comments.map((comment) => (
             <div
-              key={comment.id}
+              key={comment.uuid}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200"
             >
               <div className="flex gap-3">
@@ -123,8 +162,22 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
                   <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-gray-900 dark:text-white text-sm">
-                        Utilisateur
+                        Utilisateur  {/* TODO: Afficher nom via fetch si besoin */}
                       </span>
+                      {comment.userId === userId && (
+                        <button
+                          onClick={() => handleDelete(comment.uuid, comment.userId)}
+                          disabled={deletingId === comment.uuid}
+                          className="ml-auto p-1 text-red-500 hover:text-red-600 disabled:opacity-50"
+                          title="Supprimer"
+                        >
+                          {deletingId === comment.uuid ? (
+                            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <Trash2 size={14} />
+                          )}
+                        </button>
+                      )}
                     </div>
                     <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
                       {comment.content}
@@ -132,18 +185,18 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
                   </div>
                   <div className="flex items-center gap-4 mt-2 px-2">
                     <button
-                      onClick={() => handleLike(comment.id)}
+                      onClick={() => handleLike(comment.uuid)}
                       className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                        likedComments.has(comment.id)
+                        likedComments.has(comment.uuid)
                           ? 'text-red-500 hover:text-red-600'
                           : 'text-gray-600 dark:text-gray-400 hover:text-red-500'
                       }`}
                     >
                       <Heart
                         size={16}
-                        className={likedComments.has(comment.id) ? 'fill-current' : ''}
+                        className={likedComments.has(comment.uuid) ? 'fill-current' : ''}
                       />
-                      {likedComments.has(comment.id) ? 'J\'aime' : 'Aimer'}
+                      {likedComments.has(comment.uuid) ? 'J\'aime' : 'Aimer'}
                     </button>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(comment.createdAt)}

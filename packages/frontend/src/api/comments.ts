@@ -6,7 +6,11 @@ export const fetchComments = async (courseId: string): Promise<IComment[]> => {
   return response.data;
 };
 
-export const addComment = async (courseId: string, content: string): Promise<IComment> => {
-  const response = await api.post(`/courses/${courseId}/comments`, { content });
+export const addComment = async (courseId: string, content: string, userId: string): Promise<IComment> => {
+  const response = await api.post('/comments', { content, courseId, userId });
   return response.data;
+};
+
+export const deleteComment = async (commentId: string): Promise<void> => {
+  await api.delete(`/comments/${commentId}`);
 };

@@ -130,4 +130,18 @@ export class CoursesController {
     }
     return this.coursesService.removeUsersFromCourse(id, removeStudentsDto.students ?? []);
   }
+
+  @Get(':id/stats')
+  @UseGuards(AuthGuard('jwt'))
+  async getStats(@Param('id') id: string, @Request() req: any): Promise<any[]> {
+    const course = await this.coursesService.findCourseById(id);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    // Vérif auth: creator ou étudiant
+    if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
+      throw new ForbiddenException('You are not allowed to access these stats');
+    }
+    return this.coursesService.getCourseStats(id);
+  }
 }

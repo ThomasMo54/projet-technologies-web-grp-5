@@ -10,14 +10,19 @@ import { QuizAnswer, QuizAnswerSchema } from "./quiz-answer.schema";
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Quiz.name, schema: QuizSchema }]),
-    MongooseModule.forFeature([{ name: QuizAnswer.name, schema: QuizAnswerSchema }]),
+    MongooseModule.forFeature([
+      { name: Quiz.name, schema: QuizSchema },
+      { name: QuizAnswer.name, schema: QuizAnswerSchema }
+    ]),
     forwardRef(() => ChaptersModule),
     forwardRef(() => CoursesModule),
     forwardRef(() => UsersModule),
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService],
-  exports: [QuizzesService],
+  exports: [
+    QuizzesService,
+    MongooseModule, // Add this line to export the models
+  ],
 })
 export class QuizzesModule {}
