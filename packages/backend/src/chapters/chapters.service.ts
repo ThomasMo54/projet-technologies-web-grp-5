@@ -81,6 +81,11 @@ export class ChaptersService {
       }
     }
 
+    const chapter: Chapter | null = await this.chapterModel.findOne({ uuid: id }).exec();
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
     // Vérifier si un autre chapitre avec le même titre existe dans le même cours (si titre et courseId sont fournis)
     if (updateChapterDto.title && updateChapterDto.courseId) {
       const existingChapter = await this.chapterModel
@@ -95,7 +100,7 @@ export class ChaptersService {
       }
     }
 
-    this.ollamaService.generateSummary(updateChapterDto.content ?? '').then((summary) => {
+    this.ollamaService.generateSummary(updateChapterDto.content ?? chapter.content).then((summary) => {
       this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
     });
 
