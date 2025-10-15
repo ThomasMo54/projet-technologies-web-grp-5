@@ -100,9 +100,11 @@ export class ChaptersService {
       }
     }
 
-    this.ollamaService.generateSummary(updateChapterDto.content ?? chapter.content).then((summary) => {
-      this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
-    });
+    if (updateChapterDto.content) {
+      this.ollamaService.generateSummary(updateChapterDto.content).then((summary) => {
+        this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
+      });
+    }
 
     return this.chapterModel.findOneAndUpdate({ uuid: id }, updateChapterDto, { new: true }).exec();
   }
