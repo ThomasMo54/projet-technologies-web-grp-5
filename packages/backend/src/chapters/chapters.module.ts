@@ -5,12 +5,14 @@ import { ChaptersController } from './chapters.controller';
 import { Chapter, ChapterSchema } from './chapter.schema';
 import { CoursesModule } from '../courses/courses.module';
 import { QuizzesModule } from '../quizzes/quizzes.module';
+import { OllamaModule } from "../ollama/ollama.module";
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Chapter.name, schema: ChapterSchema }]),
     forwardRef(() => QuizzesModule),
     forwardRef(() => CoursesModule),
+    OllamaModule,
   ],
   controllers: [ChaptersController],
   providers: [ChaptersService],
