@@ -78,25 +78,43 @@ export class QuizzesService {
   }
 
   async submitQuizAnswer(createQuizAnswerDto: CreateQuizAnswerDto): Promise<QuizAnswer> {
-    // Récupérer le quiz pour vérifier les réponses
-    const quiz = await this.findQuizById(createQuizAnswerDto.quizId);
+  // Récupérer le quiz pour vérifier les réponses
+   const quiz = await this.findQuizById(createQuizAnswerDto.quizId);
     if (!quiz) {
-      throw new NotFoundException('Quiz not found');
-    }
-    // Vérifier si l'utilisateur a déjà soumis une réponse pour ce quiz
-    const existingAnswer = await this.quizAnswerModel.findOne({ quizId: createQuizAnswerDto.quizId, userId: createQuizAnswerDto.userId }).exec();
-    if (existingAnswer) {
-      throw new ConflictException('You have already submitted an answer for this quiz');
-    }
-    // Vérifier que le nombre de réponses correspond au nombre de questions
-    if (createQuizAnswerDto.answers.length !== quiz.questions.length) {
-      throw new BadRequestException('Number of answers does not match number of questions');
-    }
-    // Calculer le score
-    let score = quiz.questions.filter((question, index) => question.correctOption === createQuizAnswerDto.answers[index]).length;
-    // Enregistrer la réponse
-    const newQuizAnswer = new this.quizAnswerModel({ ...createQuizAnswerDto, score });
-    return newQuizAnswer.save();
+     throw new NotFoundException('Quiz not found');
+   } 
+  
+  // Vérifier que le nombre de réponses correspond au nombre de questions
+   if (createQuizAnswerDto.answers.length !== quiz.questions.length) {
+     throw new BadRequestException('Number of answers does not match number of questions');
+   }
+  
+  // Calculer le score en pourcentage
+   const correctCount = quiz.questions.filter(
+     (question, index) => question.correctOption === createQuizAnswerDto.answers[index]
+   ).length;
+  
+   const score = Math.round((correctCount / quiz.questions.length) * 100);
+  
+  // Vérifier si l'utilisateur a déjà répondu à ce quiz
+   const existingAnswer = await this.quizAnswerModel.findOne({
+     quizId: createQuizAnswerDto.quizId,
+     userId: createQuizAnswerDto.userId,
+   }).exec();
+
+   if (existingAnswer) {
+    // Mettre à jour la réponse existante
+     existingAnswer.answers = createQuizAnswerDto.answers;
+     existingAnswer.score = score;
+     return existingAnswer.save();
+   } else {
+    // Créer une nouvelle réponse
+     const newQuizAnswer = new this.quizAnswerModel({
+       ...createQuizAnswerDto,
+       score,
+     });
+     return newQuizAnswer.save();
+   }
   }
 
   async findQuizById(id: string): Promise<Quiz | null> {
