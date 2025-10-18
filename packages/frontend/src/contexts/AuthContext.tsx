@@ -6,6 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 interface AuthContextType {
   user: IUser | null;
   setUser: (user: IUser | null) => void;
+  updateAuthUser: (user: IUser) => void; // NOUVELLE FONCTION
   logout: () => void;
   isLoading: boolean;
 }
@@ -55,13 +56,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
+  // NOUVELLE FONCTION pour mettre à jour l'utilisateur
+  const updateAuthUser = (updatedUser: IUser) => {
+    setUser(updatedUser);
+    // Optionnel : mettre à jour aussi dans localStorage si vous y stockez l'utilisateur
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user'); // Nettoyer aussi l'utilisateur
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, updateAuthUser, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
