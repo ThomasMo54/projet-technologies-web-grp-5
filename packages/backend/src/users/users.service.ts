@@ -74,7 +74,16 @@ export class UsersService {
   }
 
   async updateUser(id: string, updateData: Partial<User>): Promise<User | null> {
-    return this.userModel.findOneAndUpdate({ uuid: id }, updateData, { new: true }).select('-password').exec();
+    // Si un nouveau mot de passe est fourni, le hasher avant la mise à jour
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+    
+    return this.userModel.findOneAndUpdate(
+      { uuid: id }, 
+      updateData, 
+      { new: true }
+    ).select('-password').exec();
   }
 
   async enrollUserInCourse(id: string, courseId: string) {
