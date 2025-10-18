@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import ToastContainer from './components/common/ToastContainer';
 import TeacherDashboard from './pages/TeacherDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import { useAuth } from './hooks/useAuth';
 import NotFound from './pages/NotFound';
 
@@ -34,6 +35,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/teacher/*" element={<PrivateRoute role="teacher"><TeacherDashboard /></PrivateRoute>} />
+            <Route path="/student/*" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
             <Route path="/*" element={<NotFound />} />
           </Routes>
         </Router>

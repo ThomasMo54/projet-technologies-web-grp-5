@@ -12,6 +12,14 @@ export interface IQuiz {
   creatorId: string;
 }
 
+export interface IQuizAnswer {
+  _id: string;
+  quizId: string;
+  userId: string;
+  answers: number[];
+  score: number;
+}
+
 export interface CreateQuizDto {
   title: string;
   questions: IQuestion[];

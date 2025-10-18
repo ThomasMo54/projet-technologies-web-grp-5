@@ -1,14 +1,13 @@
 import api from './axios';
-import type { IQuiz } from '../interfaces/quiz';
+import type { IQuiz, IQuizAnswer } from '../interfaces/quiz';
 import type { CreateQuizDto, UpdateQuizDto } from '../interfaces/quiz';
 
-// Récupérer le quiz d'un chapitre (un seul quiz par chapitre)
+// Récupérer le quiz d'un chapitre
 export const fetchQuizByChapter = async (chapterId: string): Promise<IQuiz | null> => {
   try {
     const response = await api.get(`/chapters/${chapterId}/quiz`);
     return response.data;
   } catch (error: any) {
-    // Si pas de quiz (404), retourner null
     if (error.response?.status === 404) {
       return null;
     }
@@ -16,7 +15,7 @@ export const fetchQuizByChapter = async (chapterId: string): Promise<IQuiz | nul
   }
 };
 
-// Créer un quiz pour un chapitre
+// Créer un quiz
 export const createQuiz = async (data: CreateQuizDto): Promise<IQuiz> => {
   const response = await api.post('/quizzes', data);
   return response.data;
@@ -31,4 +30,33 @@ export const updateQuiz = async (uuid: string, data: UpdateQuizDto): Promise<IQu
 // Supprimer un quiz
 export const deleteQuiz = async (uuid: string): Promise<void> => {
   await api.delete(`/quizzes/${uuid}`);
+};
+
+// Soumettre les réponses du quiz
+export const submitQuizAnswer = async (quizId: string, answers: number[], userId: string): Promise<IQuizAnswer> => {
+  const response = await api.post(`/quizzes/${quizId}/answers`, {
+    quizId,
+    userId,
+    answers,
+  });
+  return response.data;
+};
+
+// Récupérer les réponses d'un utilisateur pour un quiz
+export const fetchUserQuizAnswer = async (quizId: string, userId: string): Promise<IQuizAnswer | null> => {
+  try {
+    const response = await api.get(`/quizzes/${quizId}/answers/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+// Récupérer toutes les réponses d'un quiz
+export const fetchAllQuizAnswers = async (quizId: string): Promise<IQuizAnswer[]> => {
+  const response = await api.get(`/quizzes/${quizId}/answers`);
+  return response.data;
 };

@@ -1,27 +1,90 @@
 import React, { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type { IComment } from '../../interfaces/comment';
-import { addComment, deleteComment } from '../../api/comments';
+import { addComment, deleteComment, fetchUserById } from '../../api/comments';
 import { toast } from 'react-toastify';
 import { formatDate } from '../../utils/formatDate';
-import { MessageCircle, Send, Heart, User, Smile, Trash2 } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';  // Ajoutez ce hook
+import { MessageCircle, Send, User, Smile, Trash2 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 interface CommentListProps {
   comments: IComment[];
   courseId: string;
 }
 
+const CommentItem: React.FC<{
+  comment: IComment;
+  userId: string;
+  onDelete: (commentId: string, commentUserId: string) => void;
+  deletingId: string | null;
+}> = ({ comment, userId, onDelete, deletingId }) => {
+  const { data: commentAuthor } = useQuery({
+    queryKey: ['user', comment.userId],
+    queryFn: () => fetchUserById(comment.userId),
+  });
+
+  const isOwnComment = comment.userId === userId;
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200">
+      <div className="flex gap-3">
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+            <User size={20} className="text-white" />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
+            <div className="flex items-center gap-2 mb-1 justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {commentAuthor?.firstname} {commentAuthor?.lastname}
+                </span>
+                {isOwnComment && (
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                    Vous
+                  </span>
+                )}
+              </div>
+              {isOwnComment && (
+                <button
+                  onClick={() => onDelete(comment.uuid, comment.userId)}
+                  disabled={deletingId === comment.uuid}
+                  className="p-1 text-red-500 hover:text-red-600 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  title="Supprimer"
+                >
+                  {deletingId === comment.uuid ? (
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                </button>
+              )}
+            </div>
+            <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
+              {comment.content}
+            </p>
+          </div>
+          <div className="flex items-center mt-2 px-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatDate(comment.createdAt)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();  // Récupère l'userId connecté
+  const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
-  const userId = user?.id;  // Récupère l'ID de l'utilisateur connecté
+  const userId = user?.id;
+
   if (!userId) {
-    // Optionnel : Rediriger ou afficher un message si non connecté
     return <p className="text-gray-500">Connectez-vous pour commenter.</p>;
   }
 
@@ -31,13 +94,13 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
 
     setIsSubmitting(true);
     try {
-      await addComment(courseId, newComment.trim(), userId);  // Envoie userId
+      await addComment(courseId, newComment.trim(), userId);
       setNewComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
-      toast.success('💬 Commentaire ajouté!');
+      toast.success('Commentaire ajouté!');
     } catch (error: any) {
       if (error.response?.status === 403) {
-        toast.error('❌ Vous ne pouvez créer que vos propres commentaires');
+        toast.error('Vous ne pouvez créer que vos propres commentaires');
       } else {
         toast.error('Échec de l\'ajout du commentaire');
       }
@@ -48,7 +111,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
 
   const handleDelete = async (commentId: string, commentUserId: string) => {
     if (commentUserId !== userId) {
-      toast.error('❌ Vous ne pouvez supprimer que vos propres commentaires');
+      toast.error('Vous ne pouvez supprimer que vos propres commentaires');
       return;
     }
 
@@ -59,30 +122,18 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
     try {
       await deleteComment(commentId);
       queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
-      toast.success('🗑️ Commentaire supprimé !');
+      toast.success('Commentaire supprimé !');
     } catch (error: any) {
       if (error.response?.status === 403) {
-        toast.error('❌ Vous ne pouvez supprimer que vos propres commentaires');
+        toast.error('Vous ne pouvez supprimer que vos propres commentaires');
       } else if (error.response?.status === 404) {
-        toast.error('❌ Commentaire introuvable');
+        toast.error('Commentaire introuvable');
       } else {
         toast.error('Échec de la suppression');
       }
     } finally {
       setDeletingId(null);
     }
-  };
-
-  const handleLike = (commentId: string) => {
-    setLikedComments(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(commentId)) {
-        newSet.delete(commentId);
-      } else {
-        newSet.add(commentId);
-      }
-      return newSet;
-    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -94,7 +145,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
 
   return (
     <div className="space-y-4">
-      {/* Comment Input - Facebook Style */}
+      {/* Comment Input */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -148,63 +199,13 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
       <div className="space-y-3">
         {comments.length > 0 ? (
           comments.map((comment) => (
-            <div
+            <CommentItem
               key={comment.uuid}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200"
-            >
-              <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                    <User size={20} className="text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-gray-900 dark:text-white text-sm">
-                        Utilisateur  {/* TODO: Afficher nom via fetch si besoin */}
-                      </span>
-                      {comment.userId === userId && (
-                        <button
-                          onClick={() => handleDelete(comment.uuid, comment.userId)}
-                          disabled={deletingId === comment.uuid}
-                          className="ml-auto p-1 text-red-500 hover:text-red-600 disabled:opacity-50"
-                          title="Supprimer"
-                        >
-                          {deletingId === comment.uuid ? (
-                            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <Trash2 size={14} />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
-                      {comment.content}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4 mt-2 px-2">
-                    <button
-                      onClick={() => handleLike(comment.uuid)}
-                      className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                        likedComments.has(comment.uuid)
-                          ? 'text-red-500 hover:text-red-600'
-                          : 'text-gray-600 dark:text-gray-400 hover:text-red-500'
-                      }`}
-                    >
-                      <Heart
-                        size={16}
-                        className={likedComments.has(comment.uuid) ? 'fill-current' : ''}
-                      />
-                      {likedComments.has(comment.uuid) ? 'J\'aime' : 'Aimer'}
-                    </button>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatDate(comment.createdAt)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              comment={comment}
+              userId={userId}
+              onDelete={handleDelete}
+              deletingId={deletingId}
+            />
           ))
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">

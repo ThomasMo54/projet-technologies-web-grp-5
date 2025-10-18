@@ -36,3 +36,16 @@ export const fetchEnrolledStudent = async (studentId: string): Promise<IStudent>
   const response = await api.get(`/users/${studentId}`); 
   return response.data;
 };
+
+export const enrollCourse = async (courseId: string, studentId: string): Promise<void> => {
+  await api.put(`/courses/${courseId}/enroll`, { students: [studentId] });
+};
+
+export const unenrollCourse = async (courseId: string, studentId: string): Promise<void> => {
+  await api.delete(`/courses/${courseId}/unenroll`, { data: { students: [studentId] } });
+};
+
+export const fetchAllCourses = async (): Promise<ICourse[]> => {
+  const response = await api.get('/courses');
+  return response.data;
+};

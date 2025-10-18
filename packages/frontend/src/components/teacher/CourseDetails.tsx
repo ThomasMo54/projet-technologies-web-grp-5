@@ -6,7 +6,7 @@ import { fetchComments } from '../../api/comments';
 import { fetchChaptersByCourse } from '../../api/chapters';
 import Loader from '../common/Loader';
 import StudentList from './StudentList';
-import CommentList from './CommentList';
+import CommentList from '../common/CommentList';
 import ChapterList from './ChapterList';
 import StatsChart from './StatsChart';
 import Modal from '../common/Modal';
