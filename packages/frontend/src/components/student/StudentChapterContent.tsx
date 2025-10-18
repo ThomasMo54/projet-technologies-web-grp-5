@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchQuizByChapter, fetchUserQuizAnswer } from '../../api/quizzes';
 import type { IChapter } from '../../interfaces/chapter';
-import { FileText, Loader, BookOpen, CheckCircle } from 'lucide-react';
+import { FileText, Loader, BookOpen, CheckCircle, Award, Eye } from 'lucide-react';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import StudentQuizComponent from './StudentQuizComponent';
@@ -16,6 +16,7 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [viewResultsMode, setViewResultsMode] = useState(false);
   
   const { data: quiz, isLoading: quizLoading } = useQuery({
     queryKey: ['quiz', chapter.uuid],
@@ -34,15 +35,24 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
   const passingScore = 70;
   const quizPassed = userAnswer && userAnswer.score >= passingScore;
 
-  const handleQuizComplete = async (score: number) => {
-    if (score >= passingScore) {
-      // Rafraîchir les données du quiz
-      await refetchUserAnswer();
-      queryClient.invalidateQueries({ queryKey: ['userQuizAnswer', quiz?.uuid, user?.id] });
-      
-      // Fermer le modal
-      setQuizModalOpen(false);
-    }
+  const handleQuizComplete = async (_: number) => {
+    // Rafraîchir les données après soumission
+    await refetchUserAnswer();
+    queryClient.invalidateQueries({ queryKey: ['userQuizAnswer', quiz?.uuid, user?.id] });
+    
+    // Fermer le modal
+    setQuizModalOpen(false);
+    setViewResultsMode(false);
+  };
+
+  const handleViewResults = () => {
+    setViewResultsMode(true);
+    setQuizModalOpen(true);
+  };
+
+  const handleTakeQuiz = () => {
+    setViewResultsMode(false);
+    setQuizModalOpen(true);
   };
 
   return (
@@ -74,15 +84,56 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
           
           {quizPassed ? (
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
-              <div className="flex items-center gap-3">
-                <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
-                <div>
-                  <p className="font-medium text-green-900 dark:text-green-100">
-                    Quiz Completed ✓
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300">
-                    Score: {userAnswer.score}%
-                  </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-medium text-green-900 dark:text-green-100">
+                      Quiz Completed ✓
+                    </p>
+                    <p className="text-xs text-green-700 dark:text-green-300">
+                      Score: {userAnswer.score}%
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleViewResults}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 flex items-center gap-2"
+                >
+                  <Eye size={16} />
+                  View Results
+                </Button>
+              </div>
+            </div>
+          ) : userAnswer ? (
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <Award size={20} className="text-orange-600 dark:text-orange-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      Quiz not passed - Try again!
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Previous score: {userAnswer.score}% (Need {passingScore}% to pass)
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleViewResults}
+                    variant="secondary"
+                    className="px-3 py-2 flex items-center gap-2"
+                  >
+                    <Eye size={16} />
+                    Results
+                  </Button>
+                  <Button
+                    onClick={handleTakeQuiz}
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2"
+                  >
+                    Retry
+                  </Button>
                 </div>
               </div>
             </div>
@@ -98,10 +149,10 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
                   </p>
                 </div>
                 <Button
-                  onClick={() => setQuizModalOpen(true)}
+                  onClick={handleTakeQuiz}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2"
                 >
-                  Start
+                  Start Quiz
                 </Button>
               </div>
             </div>
@@ -125,11 +176,20 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
 
       <Modal 
         isOpen={quizModalOpen} 
-        onClose={() => setQuizModalOpen(false)} 
+        onClose={() => {
+          setQuizModalOpen(false);
+          setViewResultsMode(false);
+        }}
         title={quiz?.title || "Chapter Quiz"}
         width="4xl"
       >
-        {quiz && <StudentQuizComponent quiz={quiz} onComplete={handleQuizComplete} />}
+        {quiz && (
+          <StudentQuizComponent 
+            quiz={quiz} 
+            onComplete={handleQuizComplete}
+            viewResultsMode={viewResultsMode}
+          />
+        )}
       </Modal>
     </div>
   );

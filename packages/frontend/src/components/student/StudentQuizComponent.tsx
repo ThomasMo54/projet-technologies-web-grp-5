@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { IQuiz, IQuestion } from '../../interfaces/quiz';
-import { CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import Button from '../common/Button';
 import { submitQuizAnswer, fetchUserQuizAnswer } from '../../api/quizzes';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,13 +10,18 @@ import { toast } from 'react-toastify';
 interface StudentQuizComponentProps {
   quiz: IQuiz;
   onComplete?: (score: number) => void;
+  viewResultsMode?: boolean;
 }
 
-const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onComplete }) => {
+const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ 
+  quiz, 
+  onComplete,
+  viewResultsMode = false 
+}) => {
   const { user } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
-  const [showResults, setShowResults] = useState(false);
+  const [showResults, setShowResults] = useState(viewResultsMode);
   const [score, setScore] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,16 +29,14 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onCom
   const currentQuestion = questions[currentQuestionIndex];
   const passingScore = 70;
 
-  // Récupérer les réponses précédentes de l'utilisateur
   const { data: previousAnswer, isLoading } = useQuery({
     queryKey: ['quizAnswer', quiz.uuid, user?.id],
     queryFn: () => fetchUserQuizAnswer(quiz.uuid, user!.id),
     enabled: !!user?.id,
   });
 
-  // Si l'utilisateur a déjà répondu, afficher les résultats
   useEffect(() => {
-    if (previousAnswer) {
+    if (viewResultsMode && previousAnswer) {
       setScore(previousAnswer.score);
       setSelectedAnswers(
         previousAnswer.answers.reduce((acc, answer, index) => ({
@@ -43,7 +46,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onCom
       );
       setShowResults(true);
     }
-  }, [previousAnswer]);
+  }, [viewResultsMode, previousAnswer]);
 
   const submitMutation = useMutation({
     mutationFn: (answers: number[]) => submitQuizAnswer(quiz.uuid, answers, user!.id),
@@ -60,10 +63,12 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onCom
   });
 
   const handleSelectAnswer = (optionIndex: number) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [currentQuestionIndex]: optionIndex
-    }));
+    if (!showResults) {
+      setSelectedAnswers(prev => ({
+        ...prev,
+        [currentQuestionIndex]: optionIndex
+      }));
+    }
   };
 
   const handleNext = () => {
@@ -97,9 +102,6 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onCom
     setScore(0);
   };
 
-  // Vérifier si le quiz est déjà réussi
-  const quizPassed = previousAnswer && previousAnswer.score >= passingScore;
-
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -108,99 +110,145 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ quiz, onCom
     );
   }
 
-  if (quizPassed) {
-    return (
-      <div className="text-center py-12">
-        <div className="flex justify-center mb-4">
-          <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
-            <Lock size={48} className="text-green-600 dark:text-green-400" />
-          </div>
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Quiz Locked
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
-          You have already passed this quiz with a score of {score}%.
-        </p>
-        <p className="text-sm text-green-600 dark:text-green-400 mb-6">
-          This quiz cannot be retaken after passing.
-        </p>
-        <Button
-          onClick={() => window.history.back()}
-          variant="secondary"
-        >
-          Back to Chapter
-        </Button>
-      </div>
-    );
-  }
-
+  // Mode consultation des résultats
   if (showResults) {
     const passed = score >= passingScore;
 
     return (
-      <div className="text-center py-12">
-        {passed ? (
-          <>
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
-                <CheckCircle size={48} className="text-green-600 dark:text-green-400" />
+      <div className="space-y-6">
+        {/* Score Summary */}
+        <div className="text-center py-6">
+          {passed ? (
+            <>
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
+                  <CheckCircle size={48} className="text-green-600 dark:text-green-400" />
+                </div>
               </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Congratulations!
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
-              You passed the quiz with a score of {score}%
-            </p>
-            <p className="text-sm text-green-600 dark:text-green-400 mb-6">
-              ✓ Chapter completed
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-full">
-                <AlertCircle size={48} className="text-red-600 dark:text-red-400" />
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Congratulations!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                You passed the quiz with a score of {score}%
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-full">
+                  <AlertCircle size={48} className="text-red-600 dark:text-red-400" />
+                </div>
               </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Keep Trying!
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your score is {score}%. You need {passingScore}% to pass.
-            </p>
-          </>
-        )}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Keep Trying!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Your score is {score}%. You need {passingScore}% to pass.
+              </p>
+            </>
+          )}
 
-        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Score Breakdown:</p>
-          <div className="text-center">
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mt-4 inline-block">
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{score}%</div>
-            <div className="text-xs text-gray-500 mt-1">out of 100</div>
+            <div className="text-xs text-gray-500 mt-1">Final Score</div>
           </div>
         </div>
+
+        {/* Detailed Results */}
+        <div className="space-y-4">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Your Answers Review
+          </h4>
+          
+          {questions.map((question, qIndex) => {
+            const userAnswerIndex = selectedAnswers[qIndex];
+            const correctAnswerIndex = question.correctOption;
+            const isCorrect = userAnswerIndex === correctAnswerIndex;
+
+            return (
+              <div
+                key={qIndex}
+                className={`p-4 rounded-lg border-2 ${
+                  isCorrect
+                    ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+                    : 'border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20'
+                }`}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  {isCorrect ? (
+                    <CheckCircle size={20} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
+                  ) : (
+                    <XCircle size={20} className="text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white mb-2">
+                      Question {qIndex + 1}: {question.text}
+                    </p>
+                    
+                    <div className="space-y-2">
+                      {question.options?.map((option, oIndex) => {
+                        const isUserAnswer = userAnswerIndex === oIndex;
+                        const isCorrectAnswer = correctAnswerIndex === oIndex;
+                        
+                        return (
+                          <div
+                            key={oIndex}
+                            className={`p-3 rounded-lg text-sm ${
+                              isCorrectAnswer
+                                ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
+                                : isUserAnswer
+                                ? 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700'
+                                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className={`${
+                                isCorrectAnswer
+                                  ? 'text-green-900 dark:text-green-100 font-medium'
+                                  : isUserAnswer
+                                  ? 'text-red-900 dark:text-red-100'
+                                  : 'text-gray-700 dark:text-gray-300'
+                              }`}>
+                                {option}
+                              </span>
+                              {isCorrectAnswer && (
+                                <span className="text-xs text-green-700 dark:text-green-300 font-semibold">
+                                  ✓ Correct
+                                </span>
+                              )}
+                              {isUserAnswer && !isCorrectAnswer && (
+                                <span className="text-xs text-red-700 dark:text-red-300 font-semibold">
+                                  Your answer
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         
-        <div className="flex gap-4 justify-center">
-          {!passed && (
+        {/* Bouton "Try Again" seulement si pas réussi */}
+        {!passed && (
+          <div className="flex justify-center pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button
               onClick={handleRetakeQuiz}
               className="bg-blue-500 hover:bg-blue-600"
             >
               Try Again
             </Button>
-          )}
-          <Button
-            onClick={() => window.history.back()}
-            variant="secondary"
-          >
-            Back to Chapter
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
     );
   }
 
+  // Mode passer le quiz
   if (!currentQuestion) {
     return (
       <div className="text-center py-12">

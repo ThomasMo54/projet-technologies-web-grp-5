@@ -38,7 +38,6 @@ const StudentCourseDetails: React.FC = () => {
     queryFn: () => fetchChaptersByCourse(courseId!),
   });
 
-  // Use useQueries for dynamic list of queries
   const quizzesQueries = useQueries({
     queries: (chapters || []).map(chapter => ({
       queryKey: ['quiz', chapter.uuid],
@@ -47,7 +46,6 @@ const StudentCourseDetails: React.FC = () => {
     })),
   });
 
-  // Use useQueries for user answers
   const userAnswersQueries = useQueries({
     queries: (chapters || []).map((_, index) => {
       const quiz = quizzesQueries[index]?.data;
@@ -73,15 +71,14 @@ const StudentCourseDetails: React.FC = () => {
       const quiz = quizzesQueries[index]?.data;
       const userAnswer = userAnswersQueries[index]?.data;
 
-      // Si le chapitre a un quiz
       if (quiz) {
         totalQuizzes++;
-        // Vérifier si l'utilisateur a réussi (score >= 70)
+        // Quiz complété si score >= 70
         if (userAnswer && userAnswer.score >= 70) {
           quizzesCompleted++;
         }
       } else {
-        // Si pas de quiz, le chapitre est automatiquement complété
+        // Pas de quiz = chapitre automatiquement complété
         totalQuizzes++;
         quizzesCompleted++;
       }
