@@ -6,7 +6,7 @@ import { fetchComments } from '../../api/comments';
 import { fetchChaptersByCourse } from '../../api/chapters';
 import { fetchQuizByChapter, fetchUserQuizAnswer } from '../../api/quizzes';
 import Loader from '../common/Loader';
-import CommentList from '../teacher/CommentList';
+import CommentList from '../common/CommentList';
 import StudentChapterList from './StudentChapterList';
 import { BookOpen, MessageCircle, ArrowLeft, Calendar, User, Tag, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';

@@ -14,3 +14,8 @@ export const addComment = async (courseId: string, content: string, userId: stri
 export const deleteComment = async (commentId: string): Promise<void> => {
   await api.delete(`/comments/${commentId}`);
 };
+
+export const fetchUserById = async (userId: string) => {
+  const response = await api.get(`/users/${userId}`);
+  return response.data;
+};
