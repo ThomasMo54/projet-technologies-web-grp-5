@@ -7,6 +7,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import { useAuth } from './hooks/useAuth';
 import NotFound from './pages/NotFound';
+import SignupPage from './pages/SignupPage';
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function App() {
         >
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route path="/teacher/*" element={<PrivateRoute role="teacher"><TeacherDashboard /></PrivateRoute>} />
             <Route path="/student/*" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
             <Route path="/*" element={<NotFound />} />
