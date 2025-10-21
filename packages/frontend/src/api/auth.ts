@@ -16,6 +16,14 @@ interface JwtPayload {
   exp?: number;
 }
 
+export interface SignupData {
+  email: string;
+  password: string;
+  firstname: string;
+  lastname: string;
+  type: 'teacher' | 'student';
+}
+
 export const login = async (email: string, password: string): Promise<{ token: string; user: IUser }> => {
   const response = await api.post<LoginResponse>('/auth/login', { email, password });
   const { access_token } = response.data;
@@ -30,4 +38,12 @@ export const login = async (email: string, password: string): Promise<{ token: s
   };
 
   return { token: access_token, user };
+};
+
+// Inscription
+export const signup = async (data: SignupData): Promise<{ token: string; user: IUser }> => {
+  // Créer l'utilisateur
+  await api.post('/users', data);
+  // Connexion automatique après inscription
+  return login(data.email, data.password);
 };
