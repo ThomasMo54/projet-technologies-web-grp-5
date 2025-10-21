@@ -10,6 +10,7 @@ import { ChaptersModule } from './chapters/chapters.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { LoggingModule } from "./logging/logging.module";
 import { CommentsModule } from "./comments/comments.module";
+import { OllamaModule } from "./ollama/ollama.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CommentsModule } from "./comments/comments.module";
     ChaptersModule,
     QuizzesModule,
     CommentsModule,
+    OllamaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

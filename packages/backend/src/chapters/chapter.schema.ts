@@ -11,7 +11,10 @@ export class Chapter extends Document {
   title: string;
 
   @Prop({ required: false })
-  content: string; 
+  content: string;
+
+  @Prop({ required: false })
+  summary: string;
 
   @Prop({ required: true })
   courseId: string; // UUID du cours auquel le chapitre est lié
