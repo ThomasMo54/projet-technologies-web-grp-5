@@ -13,6 +13,9 @@ export class Course extends Document {
   @Prop({ required: false })
   description: string;
 
+  @Prop({ required: true })
+  published: boolean;
+
   @Prop({ type: [{ type: String }], default: [] })
   chapters: string[]; // Liste des UUIDs des chapitres
 

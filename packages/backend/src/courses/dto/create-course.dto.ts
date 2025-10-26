@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from "class-validator";
+import { IsBoolean, IsString, MaxLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateCourseDto {
@@ -13,6 +13,10 @@ export class CreateCourseDto {
 
   @IsString({ each: true })
   chapters?: string[];
+
+  @IsBoolean()
+  @ApiProperty({ example: true })
+  published: boolean;
 
   @IsString({ each: true })
   @ApiProperty({ example: ['database', 'sql', 'nosql'] })
