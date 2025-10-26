@@ -6,7 +6,8 @@ import { Course, CourseSchema } from './course.schema';
 import { UsersModule } from '../users/users.module';
 import { ChaptersModule } from "../chapters/chapters.module";
 import { CommentsModule } from "../comments/comments.module";
-import { QuizzesModule } from '../quizzes/quizzes.module';  
+import { QuizzesModule } from '../quizzes/quizzes.module';
+import { OllamaModule } from "../ollama/ollama.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { QuizzesModule } from '../quizzes/quizzes.module';
     forwardRef(() => ChaptersModule),
     forwardRef(() => CommentsModule),
     forwardRef(() => QuizzesModule),
+    OllamaModule,
   ],
   controllers: [CoursesController], // Vérifie que CoursesController est ici
   providers: [CoursesService], // Vérifie que CoursesService est ici

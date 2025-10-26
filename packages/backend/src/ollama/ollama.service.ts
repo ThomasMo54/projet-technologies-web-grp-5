@@ -13,6 +13,11 @@ export class OllamaService {
     return this.generateResponse(prompt);
   }
 
+  async answerQuestion(context: string, question: string): Promise<string> {
+    const prompt = `Using the following context, answer the question as accurately as possible. If the answer is not contained within the context, respond with "I don't know."\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
+    return this.generateResponse(prompt);
+  }
+
   private async generateResponse(prompt: string): Promise<string> {
     const apiUrl = this.configService.get<string>("OLLAMA_API_URL");
     const model = this.configService.get<string>("OLLAMA_MODEL");

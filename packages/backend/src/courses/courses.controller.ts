@@ -9,7 +9,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
-  NotFoundException
+  NotFoundException, Query
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -19,10 +19,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { AddRemoveStudentsDto } from "./dto/add-remove-students.dto";
 import { Chapter } from "../chapters/chapter.schema";
 import { Comment } from "../comments/comment.schema";
+import { OllamaService } from "../ollama/ollama.service";
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    private readonly ollamaService: OllamaService,
+  ) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -80,6 +84,20 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'))
   async findComments(@Param('id') id: string): Promise<Comment[]> {
     return this.coursesService.findCommentsOfCourse(id);
+  }
+
+  @Get(':id/chat')
+  @UseGuards(AuthGuard('jwt'))
+  async getCourseChat(@Param('id') id: string, @Query('question') question: string, @Request() req: any): Promise<string> {
+    const course = await this.coursesService.findCourseById(id);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    if (course.creatorId !== req.user.uuid && !course.students.includes(req.user.uuid)) {
+      throw new ForbiddenException('You are not allowed to access this course chat');
+    }
+    let context = (await this.coursesService.findChaptersContentOfCourse(id)).join('\n\n');
+    return this.ollamaService.answerQuestion(context, question);
   }
 
   @Put(':id')
