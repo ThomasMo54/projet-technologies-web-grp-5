@@ -8,6 +8,7 @@ export interface ICourse {
   description?: string;
   chapters?: IChapter[];
   tags?: string[];
+  published: boolean;
   creatorId: string;
   students?: string[];
   comments?: IComment[];
@@ -18,6 +19,7 @@ export interface CreateCourseDto {
   description?: string;
   chapters?: string[];
   tags?: string[];
+  published: boolean;
   creatorId: string;
   students?: string[];
   comments?: string[];
@@ -28,6 +30,7 @@ export interface UpdateCourseDto {
   description?: string;
   chapters?: string[];
   tags?: string[];
+  published?: boolean;
   creatorId?: string;
   students?: string[];
   comments?: string[];

@@ -71,6 +71,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           tags: tagsArray,
           students: studentsArray,
           creatorId: creatorId,
+          published: false,
           chapters: chaptersArray.length > 0 ? chaptersArray : [], 
           comments: [],
         };

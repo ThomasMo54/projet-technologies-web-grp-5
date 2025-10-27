@@ -8,7 +8,8 @@ import { fetchQuizByChapter, fetchUserQuizAnswer } from '../../api/quizzes';
 import Loader from '../common/Loader';
 import CommentList from '../common/CommentList';
 import StudentChapterList from './StudentChapterList';
-import { BookOpen, MessageCircle, ArrowLeft, Calendar, User, Tag, CheckCircle } from 'lucide-react';
+import CourseChatbot from './CourseChatbot';
+import { BookOpen, MessageCircle, ArrowLeft, Calendar, User, Tag, CheckCircle, Bot } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const StudentCourseDetails: React.FC = () => {
@@ -16,6 +17,7 @@ const StudentCourseDetails: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false);
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['course', courseId],
@@ -60,7 +62,6 @@ const StudentCourseDetails: React.FC = () => {
     }),
   });
 
-  // Calculer la progression
   const calculateProgress = () => {
     if (!chapters || chapters.length === 0) return 0;
 
@@ -73,12 +74,10 @@ const StudentCourseDetails: React.FC = () => {
 
       if (quiz) {
         totalQuizzes++;
-        // Quiz complété si score >= 70
         if (userAnswer && userAnswer.score >= 70) {
           quizzesCompleted++;
         }
       } else {
-        // Pas de quiz = chapitre automatiquement complété
         totalQuizzes++;
         quizzesCompleted++;
       }
@@ -192,6 +191,28 @@ const StudentCourseDetails: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Bouton flottant pour le chatbot */}
+        <button
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-6 right-6 z-50 group"
+          aria-label="Open AI Assistant"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition-opacity animate-pulse"></div>
+            <div className="relative bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-full p-4 shadow-2xl transition-all duration-300 group-hover:scale-110">
+              <Bot size={28} className="text-white" />
+            </div>
+          </div>
+          <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1.5 shadow-lg animate-bounce">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
+        </button>
+
+        {/* Modal du chatbot */}
+        {showChat && (
+          <CourseChatbot courseId={courseId!} onClose={() => setShowChat(false)} />
+        )}
 
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
