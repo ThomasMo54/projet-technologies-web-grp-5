@@ -3,6 +3,7 @@ export interface IChapter {
   uuid: string;
   title: string;
   content?: string;
+  summary?: string;
   courseId: string;
   quizId?: string;
 }

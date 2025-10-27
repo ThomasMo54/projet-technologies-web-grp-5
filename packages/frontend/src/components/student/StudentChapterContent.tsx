@@ -36,11 +36,8 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
   const quizPassed = userAnswer && userAnswer.score >= passingScore;
 
   const handleQuizComplete = async (_: number) => {
-    // Rafraîchir les données après soumission
     await refetchUserAnswer();
     queryClient.invalidateQueries({ queryKey: ['userQuizAnswer', quiz?.uuid, user?.id] });
-    
-    // Fermer le modal
     setQuizModalOpen(false);
     setViewResultsMode(false);
   };
@@ -63,10 +60,12 @@ const StudentChapterContent: React.FC<StudentChapterContentProps> = ({ chapter }
             <FileText size={20} className="text-blue-600 dark:text-blue-400" />
             <h5 className="font-semibold text-gray-900 dark:text-white">Chapter Content</h5>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-              {chapter.content}
-            </p>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            {/* Display HTML content from Quill editor - Same as teacher view */}
+            <div 
+              className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
+              dangerouslySetInnerHTML={{ __html: chapter.content }}
+            />
           </div>
         </div>
       )}

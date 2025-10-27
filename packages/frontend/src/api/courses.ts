@@ -49,3 +49,10 @@ export const fetchAllCourses = async (): Promise<ICourse[]> => {
   const response = await api.get('/courses');
   return response.data;
 };
+
+export const askCourseQuestion = async (courseId: string, question: string): Promise<string> => {
+  const response = await api.get(`/courses/${courseId}/chat`, {
+    params: { question }
+  });
+  return response.data;
+};

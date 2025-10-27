@@ -16,6 +16,7 @@ const createChapterSchema = z.object({
   courseId: z.string().min(1, 'Course ID is required'),
   content: z.string().optional(),
   quizId: z.string().optional(),
+  summary: z.string().optional(),
 });
 
 const updateChapterSchema = z.object({
