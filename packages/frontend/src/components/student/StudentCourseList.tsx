@@ -36,7 +36,9 @@ const StudentCourseList: React.FC = () => {
   }) || [];
 
   const enrolledCourseIds = new Set(enrolledCourses?.map(c => c.uuid) || []);
-  const availableCourses = allCourses?.filter(course => !enrolledCourseIds.has(course.uuid)) || [];
+  const availableCourses = allCourses?.filter(
+      course => !enrolledCourseIds.has(course.uuid) && course.published === true
+  ) || [];
 
   const filteredAvailableCourses = availableCourses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,7 +143,7 @@ const StudentCourseList: React.FC = () => {
             {filteredAvailableCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAvailableCourses.map((course) => (
-                  <AvailableCourseCard key={course.uuid} course={course} />
+                  <AvailableCourseCard key={course.uuid} course={course}  />
                 ))}
               </div>
             ) : (

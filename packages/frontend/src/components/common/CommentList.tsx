@@ -42,7 +42,7 @@ const CommentItem: React.FC<{
                 </span>
                 {isOwnComment && (
                   <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
-                    Vous
+                    You
                   </span>
                 )}
               </div>
@@ -51,7 +51,7 @@ const CommentItem: React.FC<{
                   onClick={() => onDelete(comment.uuid, comment.userId)}
                   disabled={deletingId === comment.uuid}
                   className="p-1 text-red-500 hover:text-red-600 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                  title="Supprimer"
+                  title="Delete"
                 >
                   {deletingId === comment.uuid ? (
                     <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
@@ -85,7 +85,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
   const userId = user?.id;
 
   if (!userId) {
-    return <p className="text-gray-500">Connectez-vous pour commenter.</p>;
+    return <p className="text-gray-500">Log in to comment.</p>;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,12 +97,12 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
       await addComment(courseId, newComment.trim(), userId);
       setNewComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
-      toast.success('Commentaire ajouté!');
+      toast.success('Comment added!');
     } catch (error: any) {
       if (error.response?.status === 403) {
-        toast.error('Vous ne pouvez créer que vos propres commentaires');
+        toast.error('You can only create your own comments.');
       } else {
-        toast.error('Échec de l\'ajout du commentaire');
+        toast.error('Failed to add comment.');
       }
     } finally {
       setIsSubmitting(false);
@@ -111,25 +111,25 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
 
   const handleDelete = async (commentId: string, commentUserId: string) => {
     if (commentUserId !== userId) {
-      toast.error('Vous ne pouvez supprimer que vos propres commentaires');
+      toast.error('You can only delete your own comments.');
       return;
     }
 
-    const isConfirmed = window.confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?');
+    const isConfirmed = window.confirm('Are you sure you want to delete this comment?');
     if (!isConfirmed) return;
 
     setDeletingId(commentId);
     try {
       await deleteComment(commentId);
       queryClient.invalidateQueries({ queryKey: ['comments', courseId] });
-      toast.success('Commentaire supprimé !');
+      toast.success('Comment deleted!');
     } catch (error: any) {
       if (error.response?.status === 403) {
-        toast.error('Vous ne pouvez supprimer que vos propres commentaires');
+        toast.error('You can only delete your own comments.');
       } else if (error.response?.status === 404) {
-        toast.error('Commentaire introuvable');
+        toast.error('Comment not found.');
       } else {
-        toast.error('Échec de la suppression');
+        toast.error('Failed to delete comment.');
       }
     } finally {
       setDeletingId(null);
@@ -159,7 +159,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Écrire un commentaire..."
+                placeholder="Write a comment..."
                 rows={1}
                 className="w-full px-4 py-3 pr-24 bg-gray-100 dark:bg-gray-700 border-0 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-200 resize-none"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -181,7 +181,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
                   type="submit"
                   disabled={!newComment.trim() || isSubmitting}
                   className="p-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-all duration-200"
-                  title="Envoyer"
+                  title="Send"
                 >
                   {isSubmitting ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -211,10 +211,10 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
             <MessageCircle size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
             <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
-              Aucun commentaire pour le moment
+              No comments yet
             </p>
             <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-              Soyez le premier à commenter ce cours!
+              Be the first to comment on this course!
             </p>
           </div>
         )}
@@ -223,7 +223,7 @@ const CommentList: React.FC<CommentListProps> = ({ comments, courseId }) => {
       {comments.length > 0 && (
         <div className="text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {comments.length} commentaire{comments.length > 1 ? 's' : ''}
+            {comments.length} comment{comments.length > 1 ? 's' : ''}
           </p>
         </div>
       )}

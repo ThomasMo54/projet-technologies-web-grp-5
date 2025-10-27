@@ -36,9 +36,9 @@ export class ChaptersService {
     const newChapter = new this.chapterModel(createChapterDto);
     const savedChapter = await newChapter.save();
 
-    //this.ollamaService.generateSummary(createChapterDto.content ?? '').then((summary) => {
-    //  this.chapterModel.findOneAndUpdate({ uuid: savedChapter.uuid }, { summary }).exec();
-    //});
+    this.ollamaService.generateSummary(createChapterDto.content ?? '').then((summary) => {
+      this.chapterModel.findOneAndUpdate({ uuid: savedChapter.uuid }, { summary }).exec();
+    });
 
     // Ajouter le chapitre à la liste des chapitres du cours
     await this.coursesService.updateCourse(createChapterDto.courseId, {
@@ -101,9 +101,9 @@ export class ChaptersService {
     }
 
     if (updateChapterDto.content) {
-     // this.ollamaService.generateSummary(updateChapterDto.content).then((summary) => {
-      //  this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
-      //});
+      this.ollamaService.generateSummary(updateChapterDto.content).then((summary) => {
+        this.chapterModel.findOneAndUpdate({ uuid: id }, { summary }).exec();
+      });
     }
 
     return this.chapterModel.findOneAndUpdate({ uuid: id }, updateChapterDto, { new: true }).exec();
