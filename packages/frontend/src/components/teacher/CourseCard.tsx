@@ -1,29 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ICourse } from '../../interfaces/course';
-import { Eye, Edit, Trash2, Users, BookMarked, Tag } from 'lucide-react';
+import { Eye, Edit, Trash2, Users, BookMarked, Tag, CheckCircle } from 'lucide-react';
+import { updateCourse } from '../../api/courses';
+import { toast } from 'react-toastify';
 
 interface CourseCardProps {
   course: ICourse;
   onEdit: () => void;
   onDelete: () => void;
+  onPublishedChange?: () => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete }) => {
-  const courseId = course.uuid;
-  
+const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPublishedChange }) => {
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handlePublish = async () => {
+    try {
+      setIsPublishing(true);
+      await updateCourse(course.uuid, { published: true });
+      toast.success('Course published!');
+      if (onPublishedChange) onPublishedChange();
+    } catch (error) {
+      toast.error('Failed to publish course');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
-      {/* Gradient Header */}
       <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-      
       <div className="p-6">
-        {/* Title */}
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {course.title}
         </h3>
-
-        {/* Description */}
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">
           {course.description || 'No description available'}
         </p>
@@ -63,14 +74,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete }) => 
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2">
           <Link
-            to={`/teacher/courses/${courseId}`}
+            to={`/teacher/courses/${course.uuid}`}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <Eye size={16} />
-            View Details
+            View
           </Link>
+
           <button
             onClick={onEdit}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
@@ -78,6 +90,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete }) => 
           >
             <Edit size={16} />
           </button>
+
           <button
             onClick={onDelete}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg transition-colors"
@@ -85,10 +98,21 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete }) => 
           >
             <Trash2 size={16} />
           </button>
+
+          {!course.published && (
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg transition-colors"
+              aria-label="Publish course"
+            >
+              <CheckCircle size={16} />
+              Publish
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Hover Effect Overlay */}
       <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
     </div>
   );

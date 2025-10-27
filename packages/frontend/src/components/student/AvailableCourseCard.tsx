@@ -11,11 +11,15 @@ interface AvailableCourseCardProps {
 }
 
 const AvailableCourseCard: React.FC<AvailableCourseCardProps> = ({ course }) => {
+  // Ne pas afficher si le cours n'est pas publié
+  if (!course.published) {
+    return null;
+  }
+
   const courseId = course.uuid;
   const [isEnrolling, setIsEnrolling] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
-
 
   const enrollMutation = useMutation({
     mutationFn: () => enrollCourse(courseId, user!.id),

@@ -58,7 +58,6 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           comments: [],
         };
         await updateCourse(course.uuid, updateData);
-        toast.success('Course updated successfully!');
       } else {
         if (!creatorId) {
           toast.error('Creator ID is required');
@@ -75,7 +74,6 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           comments: [],
         };
         await createCourse(createData);
-        toast.success('Course created successfully!');
       }
       onSuccess();
     } catch (error: any) {

@@ -70,11 +70,12 @@ const CourseList: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
             <CourseCard
-              key={course.uuid}
-              course={course}
-              onEdit={() => handleEdit(course)}
-              onDelete={() => handleDelete(course.uuid)}
-            />
+  key={course.uuid}
+  course={course}
+  onEdit={() => handleEdit(course)}
+  onDelete={() => handleDelete(course.uuid)}
+  onPublishedChange={() => refetch()}
+/>
           ))}
         </div>
       ) : (
