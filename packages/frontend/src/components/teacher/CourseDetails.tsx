@@ -8,7 +8,6 @@ import Loader from '../common/Loader';
 import StudentList from './StudentList';
 import CommentList from '../common/CommentList';
 import ChapterList from './ChapterList';
-import StatsChart from './StatsChart';
 import Modal from '../common/Modal';
 import ChapterForm from '../forms/ChapterForm';
 import { toast } from 'react-toastify';
@@ -23,7 +22,15 @@ import {
   Award,
   TrendingUp
 } from 'lucide-react';
+import StudentStatsTable from './StudentStatsTable';
 
+/**
+ * Page de détail du cours pour l'enseignant
+ * Affiche :
+ * - Infos cours, stats, chapitres, étudiants, commentaires, stats
+ * - Ajout de chapitre via modal
+ * - Rafraîchissement des données après ajout
+ */
 const CourseDetails: React.FC = () => {
   const { courseId } = useParams();
   const { data: course, isLoading } = useQuery({
@@ -52,7 +59,7 @@ const CourseDetails: React.FC = () => {
   const handleSuccess = () => {
     refetch();
     handleClose();
-    toast.success('✅ Chapitre ajouté avec succès!');
+    toast.success('Chapitre ajouté avec succès!');
   };
 
   if (isLoading) return <Loader />;
@@ -61,7 +68,7 @@ const CourseDetails: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
       <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
         
-        {/* Hero Section - Course Header */}
+        {/* === Section principale du cours === */}
         <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           
@@ -104,7 +111,7 @@ const CourseDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* === Cartes statistiques === */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <div className="flex items-center justify-between mb-2">
@@ -136,7 +143,7 @@ const CourseDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Chapters Section */}
+        {/* === Chapitres === */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">
@@ -159,7 +166,7 @@ const CourseDetails: React.FC = () => {
           </div>
         </section>
 
-        {/* Enrolled Students Section */}
+        {/* === Étudiants, Commentaires, Stats === */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">
@@ -173,7 +180,6 @@ const CourseDetails: React.FC = () => {
           </div>
         </section>
 
-        {/* Comments Section */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">
@@ -187,7 +193,6 @@ const CourseDetails: React.FC = () => {
           </div>
         </section>
 
-        {/* Statistics Section */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">
@@ -195,13 +200,14 @@ const CourseDetails: React.FC = () => {
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                 <BarChart3 size={24} className="text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Statistiques</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Performances des étudiants</h3>
             </div>
-            <StatsChart courseId={courseId!} />
-          </div>
+                 <StudentStatsTable courseId={courseId!} />          
+            </div>
         </section>
       </div>
 
+      {/* === Modal ajout chapitre === */}
       <Modal isOpen={addChapterModalOpen} onClose={handleClose} title="Ajouter un chapitre" width="5xl">
         <ChapterForm courseId={courseId!} onSuccess={handleSuccess} />
       </Modal>

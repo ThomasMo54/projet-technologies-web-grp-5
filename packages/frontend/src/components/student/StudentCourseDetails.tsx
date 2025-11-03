@@ -9,37 +9,63 @@ import Loader from '../common/Loader';
 import CommentList from '../common/CommentList';
 import StudentChapterList from './StudentChapterList';
 import CourseChatbot from './CourseChatbot';
-import { BookOpen, MessageCircle, ArrowLeft, Calendar, User, Tag, CheckCircle, Bot } from 'lucide-react';
+import { BookOpen, MessageCircle, ArrowLeft, User, Tag, CheckCircle, Bot } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
+/**
+ * Page principale de détail d'un cours pour l'étudiant
+ * Affiche :
+ * - Informations du cours (titre, créateur, description, tags)
+ * - Progression globale (basée sur les quizzes réussis)
+ * - Statistiques (chapitres, commentaires)
+ * - Liste des chapitres avec contenu et quiz
+ * - Discussion (CommentList)
+ * - Chatbot IA (modale flottante)
+ * Utilise React Query pour toutes les données
+ */
 const StudentCourseDetails: React.FC = () => {
-  const { courseId } = useParams();
+  const { courseId } = useParams(); // ID du cours depuis l'URL
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
-  const [showChat, setShowChat] = useState(false);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null); // Chapitre sélectionné
+  const [showChat, setShowChat] = useState(false); // Affichage du chatbot
 
+  /**
+   * Récupère les données du cours
+   */
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId!),
   });
 
+  /**
+   * Récupère les informations du professeur (créateur)
+   */
   const { data: teacher } = useQuery({
     queryKey: ['teacher', course?.creatorId],
     queryFn: () => fetchEnrolledStudent(course!.creatorId),
     enabled: !!course?.creatorId,
   });
 
+  /**
+   * Récupère les commentaires du cours
+   */
   const { data: comments } = useQuery({
     queryKey: ['comments', courseId],
     queryFn: () => fetchComments(courseId!),
   });
 
+  /**
+   * Récupère les chapitres du cours
+   */
   const { data: chapters, isLoading: chaptersLoading } = useQuery({
     queryKey: ['chapters', courseId],
     queryFn: () => fetchChaptersByCourse(courseId!),
   });
 
+  /**
+   * Récupère les quizzes pour chaque chapitre (en parallèle)
+   */
   const quizzesQueries = useQueries({
     queries: (chapters || []).map(chapter => ({
       queryKey: ['quiz', chapter.uuid],
@@ -48,6 +74,9 @@ const StudentCourseDetails: React.FC = () => {
     })),
   });
 
+  /**
+   * Récupère les réponses de l'utilisateur pour chaque quiz
+   */
   const userAnswersQueries = useQueries({
     queries: (chapters || []).map((_, index) => {
       const quiz = quizzesQueries[index]?.data;
@@ -62,30 +91,33 @@ const StudentCourseDetails: React.FC = () => {
     }),
   });
 
-  const calculateProgress = () => {
-    if (!chapters || chapters.length === 0) return 0;
+  /**
+   * Calcule la progression globale du cours
+   * Basé sur les quizzes réussis (score >= 70%) ou chapitres sans quiz
+   */
+ const calculateProgress = () => {
+  if (!chapters || chapters.length === 0) return 0;
 
-    let quizzesCompleted = 0;
-    let totalQuizzes = 0;
+  let quizzesCompleted = 0;
+  let totalQuizzes = 0;
 
-    chapters.forEach((_, index) => {
-      const quiz = quizzesQueries[index]?.data;
-      const userAnswer = userAnswersQueries[index]?.data;
+  chapters.forEach((_: any, index: number) => {
+    const quiz = quizzesQueries[index]?.data;
+    const userAnswer = userAnswersQueries[index]?.data;
 
-      if (quiz) {
-        totalQuizzes++;
-        if (userAnswer && userAnswer.score >= 70) {
-          quizzesCompleted++;
-        }
-      } else {
-        totalQuizzes++;
+    if (quiz) {
+      totalQuizzes++;
+      if (userAnswer && userAnswer.score >= 70) {
         quizzesCompleted++;
       }
-    });
+    }
+    // Chapitre sans quiz → ignoré
+  });
 
-    return totalQuizzes > 0 ? Math.round((quizzesCompleted / totalQuizzes) * 100) : 0;
-  };
+  return totalQuizzes > 0 ? Math.round((quizzesCompleted / totalQuizzes) * 100) : 0;
+ };
 
+  // Affiche le loader pendant le chargement des données principales
   if (courseLoading || chaptersLoading) return <Loader />;
 
   const progressPercentage = calculateProgress();
@@ -94,6 +126,7 @@ const StudentCourseDetails: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
       <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8">
         
+        {/* === Bouton de retour === */}
         <button
           onClick={() => navigate('/student/courses')}
           className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
@@ -102,12 +135,14 @@ const StudentCourseDetails: React.FC = () => {
           Back to Courses
         </button>
 
+        {/* === Section : Informations du cours === */}
         <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           
           <div className="relative p-8 md:p-10">
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
+                {/* Titre + icône */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
                     <BookOpen size={32} className="text-white" />
@@ -121,18 +156,16 @@ const StudentCourseDetails: React.FC = () => {
                         <User size={16} />
                         {teacher?.firstname} {teacher?.lastname}
                       </span>
-                      <span className="flex items-center gap-2">
-                        <Calendar size={16} />
-                        Created {new Date(Date.now()).toLocaleDateString('en-US')}
-                      </span>
                     </div>
                   </div>
                 </div>
                 
+                {/* Description */}
                 <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
                   {course?.description || 'No description available for this course.'}
                 </p>
 
+                {/* Tags */}
                 {course?.tags && course.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {course.tags.map((tag, index) => (
@@ -149,6 +182,7 @@ const StudentCourseDetails: React.FC = () => {
               </div>
             </div>
 
+            {/* === Barre de progression === */}
             <div className="mt-8 p-5 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">Your Progress</h3>
@@ -172,6 +206,7 @@ const StudentCourseDetails: React.FC = () => {
               </p>
             </div>
 
+            {/* === Cartes de statistiques === */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
                 <div className="flex items-center justify-between mb-2">
@@ -192,7 +227,7 @@ const StudentCourseDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Bouton flottant pour le chatbot */}
+        {/* === Bouton flottant : Chatbot IA === */}
         <button
           onClick={() => setShowChat(true)}
           className="fixed bottom-6 right-6 z-50 group"
@@ -209,11 +244,12 @@ const StudentCourseDetails: React.FC = () => {
           </div>
         </button>
 
-        {/* Modal du chatbot */}
+        {/* === Modale du chatbot === */}
         {showChat && (
           <CourseChatbot courseId={courseId!} onClose={() => setShowChat(false)} />
         )}
 
+        {/* === Section : Contenu du cours (chapitres) === */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">
@@ -231,6 +267,7 @@ const StudentCourseDetails: React.FC = () => {
           </div>
         </section>
 
+        {/* === Section : Discussion === */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           <div className="p-6">

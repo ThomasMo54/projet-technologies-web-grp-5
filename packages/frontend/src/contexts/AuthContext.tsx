@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 interface AuthContextType {
   user: IUser | null;
   setUser: (user: IUser | null) => void;
-  updateAuthUser: (user: IUser) => void; // NOUVELLE FONCTION
+  updateAuthUser: (user: IUser) => void; // Met à jour les infos utilisateur dans le contexte
   logout: () => void;
   isLoading: boolean;
 }
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Vérifier si un token existe au chargement
+    // Restaure la session utilisateur depuis le token JWT au chargement de l'app
     const token = localStorage.getItem('token');
     if (token) {
       try {
@@ -56,16 +56,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
-  // NOUVELLE FONCTION pour mettre à jour l'utilisateur
+  /**
+   * Met à jour l'utilisateur connecté (après modification du profil)
+   */
   const updateAuthUser = (updatedUser: IUser) => {
     setUser(updatedUser);
-    // Optionnel : mettre à jour aussi dans localStorage si vous y stockez l'utilisateur
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  /**
+   * Déconnecte l'utilisateur et nettoie le localStorage
+   */
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user'); // Nettoyer aussi l'utilisateur
+    localStorage.removeItem('user');
     setUser(null);
   };
 

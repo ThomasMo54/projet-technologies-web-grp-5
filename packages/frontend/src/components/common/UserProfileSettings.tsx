@@ -14,70 +14,84 @@ interface UserProfileSettingsProps {
   onDeleteUser: (password: string) => Promise<void>;
 }
 
+/**
+ * Composant de gestion du profil utilisateur
+ * Permet de modifier les infos personnelles, le mot de passe et supprimer le compte
+ */
 const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
   user,
   onUpdateUser,
   onDeleteUser,
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'password' | 'danger'>('info');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
+  const [loading, setLoading] = useState(false); // État global de chargement
+  const [error, setError] = useState<string>(''); // Message d'erreur
+  const [success, setSuccess] = useState<string>(''); // Message de succès
 
-  // Form states for personal info
+  // États du formulaire "Informations personnelles"
   const [firstname, setFirstname] = useState(user.firstname);
   const [lastname, setLastname] = useState(user.lastname);
 
-  // Form states for password change
+  // États du formulaire "Mot de passe"
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Form states for account deletion
+  // États du formulaire "Suppression de compte"
   const [deletePassword, setDeletePassword] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  /**
+   * Réinitialise les messages d'erreur et de succès
+   */
   const resetMessages = () => {
     setError('');
     setSuccess('');
   };
 
+  /**
+   * Met à jour les informations personnelles (prénom, nom)
+   */
   const handleUpdateInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     resetMessages();
 
     if (!firstname.trim() || !lastname.trim()) {
-      setError('First name and last name are required');
+      setError('Le prénom et le nom sont obligatoires');
       return;
     }
 
     setLoading(true);
     try {
       await onUpdateUser({ firstname, lastname });
-      setSuccess('Profile updated successfully!');
+      setSuccess('Profil mis à jour avec succès !');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      setError(err.response?.data?.message || 'Échec de la mise à jour du profil');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Change le mot de passe de l'utilisateur
+   * Vérifie la longueur, la correspondance et le mot de passe actuel
+   */
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     resetMessages();
 
     if (!currentPassword) {
-      setError('Current password is required');
+      setError('Le mot de passe actuel est requis');
       return;
     }
 
     if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters');
+      setError('Le nouveau mot de passe doit contenir au moins 8 caractères');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Les mots de passe ne correspondent pas');
       return;
     }
 
@@ -89,35 +103,40 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
         password: newPassword,
         currentPassword,
       });
-      setSuccess('Password updated successfully!');
+      setSuccess('Mot de passe mis à jour avec succès !');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update password. Please check your current password.');
+      setError(err.response?.data?.message || 'Échec de la mise à jour. Vérifiez votre mot de passe actuel.');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Supprime définitivement le compte utilisateur
+   * Demande le mot de passe pour confirmation
+   */
   const handleDeleteAccount = async () => {
     if (!deletePassword) {
-      setError('Please enter your password to confirm deletion');
+      setError('Veuillez entrer votre mot de passe pour confirmer la suppression');
       return;
     }
 
     setLoading(true);
     try {
       await onDeleteUser(deletePassword);
+      // La redirection ou déconnexion est gérée par le parent
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete account. Please check your password.');
+      setError(err.response?.data?.message || 'Échec de la suppression. Vérifiez votre mot de passe.');
       setLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
+      {/* === Onglets de navigation === */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <div className="flex space-x-4">
           <button
@@ -132,7 +151,7 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
             }`}
           >
             <User size={16} className="inline mr-2" />
-            Personal Info
+            Informations personnelles
           </button>
           <button
             onClick={() => {
@@ -146,7 +165,7 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
             }`}
           >
             <Lock size={16} className="inline mr-2" />
-            Password
+            Mot de passe
           </button>
           <button
             onClick={() => {
@@ -161,12 +180,12 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
             }`}
           >
             <Trash2 size={16} className="inline mr-2" />
-            Danger Zone
+            Zone dangereuse
           </button>
         </div>
       </div>
 
-      {/* Messages */}
+      {/* === Messages d'erreur et de succès === */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start">
           <AlertCircle className="text-red-500 mr-3 flex-shrink-0 mt-0.5" size={20} />
@@ -181,7 +200,7 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
         </div>
       )}
 
-      {/* Tab Content */}
+      {/* === Onglet : Informations personnelles === */}
       {activeTab === 'info' && (
         <form onSubmit={handleUpdateInfo} className="space-y-4">
           <div>
@@ -194,12 +213,12 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
               disabled
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">L'email ne peut pas être modifié</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              First Name *
+              Prénom *
             </label>
             <input
               type="text"
@@ -212,7 +231,7 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Last Name *
+              Nom *
             </label>
             <input
               type="text"
@@ -226,17 +245,18 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
           <div className="flex justify-end">
             <Button type="submit" disabled={loading}>
               <Save size={16} className="mr-2" />
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
             </Button>
           </div>
         </form>
       )}
 
+      {/* === Onglet : Mot de passe === */}
       {activeTab === 'password' && (
         <form onSubmit={handleUpdatePassword} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Current Password *
+              Mot de passe actuel *
             </label>
             <input
               type="password"
@@ -249,7 +269,7 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              New Password *
+              Nouveau mot de passe *
             </label>
             <input
               type="password"
@@ -259,12 +279,12 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
               minLength={8}
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 caractères</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Confirm New Password *
+              Confirmer le nouveau mot de passe *
             </label>
             <input
               type="password"
@@ -278,23 +298,25 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
           <div className="flex justify-end">
             <Button type="submit" disabled={loading}>
               <Lock size={16} className="mr-2" />
-              {loading ? 'Updating...' : 'Update Password'}
+              {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
             </Button>
           </div>
         </form>
       )}
 
+      {/* === Onglet : Zone dangereuse === */}
       {activeTab === 'danger' && (
         <div className="space-y-4">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
             <h4 className="text-red-800 dark:text-red-200 font-semibold mb-2 flex items-center">
               <AlertCircle className="mr-2" size={20} />
-              Delete Account
+              Supprimer le compte
             </h4>
             <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-              Once you delete your account, there is no going back. All your data will be permanently deleted.
+              Une fois votre compte supprimé, il n’y a pas de retour en arrière. Toutes vos données seront perdues définitivement.
             </p>
 
+            {/* Bouton pour déclencher la confirmation */}
             {!showDeleteConfirm ? (
               <Button
                 variant="secondary"
@@ -302,18 +324,18 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 <Trash2 size={16} className="mr-2" />
-                Delete Account
+                Supprimer le compte
               </Button>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Enter your password to confirm deletion:
+                  Entrez votre mot de passe pour confirmer :
                 </p>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Votre mot de passe"
                   className="w-full px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
                 <div className="flex space-x-3">
@@ -325,14 +347,14 @@ const UserProfileSettings: React.FC<UserProfileSettingsProps> = ({
                       resetMessages();
                     }}
                   >
-                    Cancel
+                    Annuler
                   </Button>
                   <Button
                     onClick={handleDeleteAccount}
                     disabled={loading}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    {loading ? 'Deleting...' : 'Confirm Delete'}
+                    {loading ? 'Suppression...' : 'Confirmer la suppression'}
                   </Button>
                 </div>
               </div>

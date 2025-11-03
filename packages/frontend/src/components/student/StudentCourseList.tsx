@@ -7,18 +7,33 @@ import AvailableCourseCard from './AvailableCourseCard';
 import { useAuth } from '../../hooks/useAuth';
 import { Search, BookOpen, Package } from 'lucide-react';
 
+/**
+ * Composant principal pour l'étudiant : Liste des cours
+ * Affiche :
+ * - Les cours inscrits (prioritaires)
+ * - Les cours disponibles (optionnel, expandable)
+ * Fonctionnalités : recherche, filtre par tag, affichage conditionnel
+ */
 const StudentCourseList: React.FC = () => {
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterTag, setFilterTag] = useState<string | null>(null);
-  const [showAvailable, setShowAvailable] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Recherche textuelle
+  const [filterTag, setFilterTag] = useState<string | null>(null); // Filtre par tag
+  const [showAvailable, setShowAvailable] = useState(false); // Affichage des cours disponibles
 
+  /**
+   * Récupère les cours auxquels l'étudiant est inscrit
+   * Dépend de l'utilisateur connecté
+   */
   const { data: enrolledCourses, isLoading: enrolledLoading } = useQuery({
     queryKey: ['enrolledCourses', user?.id],
     queryFn: () => fetchEnrolledCourses(user!.id),
-    enabled: !!user,
+    enabled: !!user, // Exécuté uniquement si l'utilisateur est connecté
   });
 
+  /**
+   * Récupère tous les cours publiés de la plateforme
+   * Utilisé pour afficher les cours disponibles à l'inscription
+   */
   const { data: allCourses, isLoading: allCoursesLoading } = useQuery({
     queryKey: ['allCourses'],
     queryFn: () => fetchAllCourses(),
@@ -26,8 +41,14 @@ const StudentCourseList: React.FC = () => {
 
   const isLoading = enrolledLoading || allCoursesLoading;
 
+  // Affiche le loader pendant le chargement
   if (isLoading) return <Loader />;
 
+  /**
+   * Filtre les cours inscrits selon :
+   * - Recherche dans titre/description
+   * - Tag sélectionné
+   */
   const filteredEnrolledCourses = enrolledCourses?.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -35,11 +56,22 @@ const StudentCourseList: React.FC = () => {
     return matchesSearch && matchesTag;
   }) || [];
 
+  /**
+   * Extrait les IDs des cours déjà inscrits
+   * Utilisé pour exclure ces cours de la section "Disponibles"
+   */
   const enrolledCourseIds = new Set(enrolledCourses?.map(c => c.uuid) || []);
+
+  /**
+   * Liste des cours publiés non inscrits
+   */
   const availableCourses = allCourses?.filter(
       course => !enrolledCourseIds.has(course.uuid) && course.published === true
   ) || [];
 
+  /**
+   * Applique recherche + filtre sur les cours disponibles
+   */
   const filteredAvailableCourses = availableCourses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -47,12 +79,17 @@ const StudentCourseList: React.FC = () => {
     return matchesSearch && matchesTag;
   });
 
+  /**
+   * Liste unique de tous les tags présents dans les cours
+   * Utilisée pour les boutons de filtre
+   */
   const allTags = Array.from(
     new Set((allCourses || []).flatMap(course => course.tags || []))
   );
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 sm:p-6 lg:p-8">
+      {/* === En-tête principal === */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
           My Courses
@@ -62,6 +99,7 @@ const StudentCourseList: React.FC = () => {
         </p>
       </div>
 
+      {/* === Barre de recherche et filtres === */}
       <div className="space-y-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -74,6 +112,7 @@ const StudentCourseList: React.FC = () => {
           />
         </div>
 
+        {/* Boutons de filtre par tag */}
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             <button
@@ -103,6 +142,7 @@ const StudentCourseList: React.FC = () => {
         )}
       </div>
 
+      {/* === Section : Cours inscrits === */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen size={24} className="text-blue-600 dark:text-blue-400" />
@@ -125,6 +165,7 @@ const StudentCourseList: React.FC = () => {
         )}
       </div>
 
+      {/* === Section : Cours disponibles (expandable) === */}
       <div className="mt-12">
         <button
           onClick={() => setShowAvailable(!showAvailable)}
@@ -143,7 +184,7 @@ const StudentCourseList: React.FC = () => {
             {filteredAvailableCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAvailableCourses.map((course) => (
-                  <AvailableCourseCard key={course.uuid} course={course}  />
+                  <AvailableCourseCard key={course.uuid} course={course} />
                 ))}
               </div>
             ) : (

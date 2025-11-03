@@ -9,8 +9,19 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 import { PlusCircle, Trash2, Check, FileQuestion } from 'lucide-react';
 
+/**
+ * Schéma Zod pour une option de réponse
+ * Doit être une chaîne non vide (validé plus tard dans le tableau)
+ */
 const optionSchema = z.string();
 
+/**
+ * Schéma Zod pour une question
+ * - text : minimum 5 caractères
+ * - options : exactement 4 options
+ * - correctOption : index valide (0-3)
+ * - Validation croisée : l'option correcte doit être remplie
+ */
 const questionSchema = z
   .object({
     text: z
@@ -43,6 +54,11 @@ const questionSchema = z
     }
   );
 
+/**
+ * Schéma Zod global pour le quiz
+ * - title : minimum 5 caractères
+ * - questions : au moins 1 question
+ */
 const quizSchema = z.object({
   title: z
     .string()
@@ -58,12 +74,17 @@ const quizSchema = z.object({
 type QuizFormData = z.infer<typeof quizSchema>;
 
 interface QuizFormProps {
-  courseId: string;
-  chapterId: string;
-  quiz?: IQuiz;
-  onSuccess: () => void;
+  courseId: string; // ID du cours (non utilisé ici, mais conservé)
+  chapterId: string; // ID du chapitre auquel le quiz est lié
+  quiz?: IQuiz; // Quiz existant pour le mode édition
+  onSuccess: () => void; // Callback après création/mise à jour
 }
 
+/**
+ * Composant de formulaire pour créer ou modifier un quiz
+ * Utilise React Hook Form + useFieldArray pour gérer les questions dynamiques
+ * Validation complète avec Zod (texte, options, réponse correcte)
+ */
 const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
   const { user } = useAuth();
 
@@ -73,8 +94,8 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
     control,
     formState: { errors, isValid, isSubmitting },
   } = useForm<QuizFormData>({
-    resolver: zodResolver(quizSchema),
-    mode: 'onChange',
+    resolver: zodResolver(quizSchema), // Validation Zod complète
+    mode: 'onChange', // Validation en temps réel
     defaultValues: quiz
       ? { title: quiz.title, questions: quiz.questions }
       : {
@@ -85,20 +106,27 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
         },
   });
 
+  // Gestion dynamique des questions
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'questions',
   });
 
+  /**
+   * Gère la soumission du formulaire
+   * Appelle l'API de création ou mise à jour selon le mode
+   */
   const onSubmit = async (data: QuizFormData) => {
     try {
       if (quiz) {
+        // Mode édition
         const updateData: UpdateQuizDto = {
           title: data.title,
           questions: data.questions,
         };
         await updateQuiz(quiz.uuid, updateData);
       } else {
+        // Mode création
         if (!user?.id) {
           toast.error('User not authenticated');
           return;
@@ -111,7 +139,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
         };
         await createQuiz(createData);
       }
-      onSuccess();
+      onSuccess(); // Ferme ou rafraîchit
     } catch (error: any) {
       console.error('Error saving quiz:', error);
       const errorMessage =
@@ -122,11 +150,13 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
 
   return (
     <div className="relative max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+      {/* Bandeau décoratif en haut */}
       <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
 
+      {/* Formulaire principal */}
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
 
-        {/* Quiz Title */}
+        {/* === Titre du Quiz === */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Quiz Title
@@ -137,7 +167,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
               size={20}
             />
             <input
-              {...register('title')}
+              {...register('title')} // Enregistrement du titre
               className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 ${
                 errors.title
                   ? '!border-red-500 !ring-red-500 ring-2'
@@ -146,6 +176,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
               placeholder="Enter quiz title"
             />
           </div>
+          {/* Erreur de validation */}
           {errors.title && (
             <p className="text-red-500 text-xs mt-1">
               {errors.title.message}
@@ -153,12 +184,13 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
           )}
         </div>
 
-        {/* Questions */}
+        {/* === Section Questions === */}
         <div>
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
               Questions
             </h4>
+            {/* Bouton pour ajouter une question */}
             <Button
               type="button"
               onClick={() =>
@@ -171,16 +203,18 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
             </Button>
           </div>
 
+          {/* Liste des questions */}
           {fields.map((field, index) => (
             <div
               key={field.id}
               className="border-2 border-gray-200 dark:border-gray-600 p-5 mb-4 rounded-xl bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-700 dark:to-blue-900/10"
             >
-              {/* Question Header */}
+              {/* En-tête de la question */}
               <div className="flex justify-between items-center mb-4">
                 <h5 className="text-md font-semibold text-gray-800 dark:text-gray-200">
                   Question {index + 1}
                 </h5>
+                {/* Bouton de suppression (désactivé si une seule question) */}
                 {fields.length > 1 && (
                   <button
                     type="button"
@@ -193,7 +227,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
                 )}
               </div>
 
-              {/* Question Text */}
+              {/* === Texte de la question === */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Question Text
@@ -214,7 +248,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
                 )}
               </div>
 
-              {/* Options */}
+              {/* === Options de réponse === */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Answer Options
@@ -222,6 +256,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
                 <div className="space-y-3">
                   {Array.from({ length: 4 }).map((_, optIndex) => (
                     <div key={optIndex} className="flex items-center gap-2">
+                      {/* Numéro de l'option */}
                       <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium">
                         {optIndex + 1}
                       </span>
@@ -237,6 +272,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
                     </div>
                   ))}
                 </div>
+                {/* Erreur sur les options */}
                 {errors.questions?.[index]?.options && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.questions[index]?.options?.message as string}
@@ -244,7 +280,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
                 )}
               </div>
 
-              {/* Correct Option */}
+              {/* === Réponse correcte === */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Correct Answer
@@ -275,7 +311,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
           ))}
         </div>
 
-        {/* Submit Button */}
+        {/* === Bouton de soumission === */}
         <Button
           type="submit"
           disabled={isSubmitting || !isValid}
@@ -290,7 +326,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ chapterId, quiz, onSuccess }) => {
         </Button>
       </form>
 
-      {/* Hover Border */}
+      {/* Effet de bordure au survol (décoratif) */}
       <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
     </div>
   );

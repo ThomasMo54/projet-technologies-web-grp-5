@@ -2,11 +2,29 @@ import React from 'react';
 import { Sparkles, BookOpen, AlertCircle, CheckCircle2, Lightbulb } from 'lucide-react';
 
 interface AISummaryDisplayProps {
-  summary: string;
+  summary: string; // Résumé brut en Markdown (généré par l'IA)
 }
 
+/**
+ * Composant d'affichage du résumé AI d'un chapitre
+ * Fonctionnalités :
+ * - Parse le texte brut en sections (titres, listes, paragraphes)
+ * - Support du Markdown inline (**gras**, *italique*, `code`)
+ * - Détection intelligente :
+ *   - Questions (icône alerte)
+ *   - Notes importantes (icône ampoule)
+ *   - Listes avec puces
+ * - Design riche avec icônes, couleurs, bordures
+ * - Responsive et accessible
+ */
 const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
-  // Parse the summary text into structured sections
+  /**
+   * Parse le texte brut en sections structurées
+   * Gère :
+   * - Titres (finissant par ":" ou en **gras**)
+   * - Listes (commençant par "* " ou "- ")
+   * - Paragraphes normaux
+   */
   const parseContent = (text: string) => {
     const lines = text.split('\n');
     const sections: Array<{ type: string; content: string; items?: string[] }> = [];
@@ -23,7 +41,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
         return;
       }
 
-      // Detect headers (lines ending with : or starting with **)
+      // Détecte les en-têtes
       if (trimmed.endsWith(':') || (trimmed.startsWith('**') && trimmed.endsWith('**'))) {
         if (currentSection) {
           sections.push(currentSection);
@@ -34,7 +52,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
           items: []
         };
       }
-      // Detect list items (starting with * or -)
+      // Détecte les éléments de liste
       else if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
         if (!currentSection || currentSection.type !== 'header') {
           if (currentSection) sections.push(currentSection);
@@ -42,10 +60,9 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
         }
         currentSection.items?.push(trimmed.substring(2));
       }
-      // Regular paragraph
+      // Paragraphe normal
       else {
         if (currentSection && currentSection.type === 'header' && currentSection.items) {
-          // Continue adding to current header section
           currentSection.content += ' ' + trimmed;
         } else {
           if (currentSection) sections.push(currentSection);
@@ -61,19 +78,20 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
     return sections;
   };
 
-  // Format inline markdown (bold, italic, inline code)
+  /**
+   * Formate le Markdown inline dans le texte
+   * Gère : **gras**, *italique*, `code`
+   */
   const formatInlineMarkdown = (text: string) => {
     const parts: React.ReactNode[] = [];
     let remaining = text;
     let key = 0;
 
-    // Combine all patterns
     const combinedRegex = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g;
     const matches = Array.from(remaining.matchAll(combinedRegex));
 
     let lastIndex = 0;
     matches.forEach(match => {
-      // Add text before match
       if (match.index! > lastIndex) {
         parts.push(remaining.substring(lastIndex, match.index));
       }
@@ -102,7 +120,6 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
       lastIndex = match.index! + matchText.length;
     });
 
-    // Add remaining text
     if (lastIndex < remaining.length) {
       parts.push(remaining.substring(lastIndex));
     }
@@ -114,7 +131,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
+      {/* === Bannière d'en-tête AI === */}
       <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
         <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <Sparkles size={24} className="text-purple-600 dark:text-purple-400" />
@@ -129,9 +146,10 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
         </div>
       </div>
 
-      {/* Content Sections */}
+      {/* === Contenu structuré === */}
       <div className="space-y-5">
         {sections.map((section, index) => {
+          // === En-tête avec liste (ex: Concepts clés:) ===
           if (section.type === 'header') {
             return (
               <div key={index} className="space-y-3">
@@ -153,6 +171,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
             );
           }
 
+          // === Liste simple (sans en-tête) ===
           if (section.type === 'list') {
             return (
               <ul key={index} className="space-y-2 ml-4">
@@ -166,12 +185,13 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
             );
           }
 
+          // === Paragraphe avec détection intelligente ===
           if (section.type === 'paragraph') {
-            // Check if it's a question or important note
             const isQuestion = section.content.includes('?');
             const isNote = section.content.toLowerCase().startsWith('note:') || 
                           section.content.toLowerCase().startsWith('important:');
 
+            // Question mise en évidence
             if (isQuestion) {
               return (
                 <div key={index} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
@@ -185,6 +205,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
               );
             }
 
+            // Note importante
             if (isNote) {
               return (
                 <div key={index} className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-l-4 border-amber-500">
@@ -198,6 +219,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
               );
             }
 
+            // Paragraphe standard
             return (
               <p key={index} className="text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
                 {formatInlineMarkdown(section.content)}
@@ -209,7 +231,7 @@ const AISummaryDisplay: React.FC<AISummaryDisplayProps> = ({ summary }) => {
         })}
       </div>
 
-      {/* Footer */}
+      {/* === Pied de page === */}
       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <BookOpen size={16} />

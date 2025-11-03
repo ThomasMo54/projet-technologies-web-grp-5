@@ -8,22 +8,22 @@ const NotFound: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full text-center">
-        {/* Icon animé */}
+        {/* Icône animée */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
             <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
               <AlertCircle className="text-white" size={64} />
             </div>
+            {/* Animation de pulsation */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full animate-ping opacity-20"></div>
           </div>
         </div>
 
-        {/* 404 Text */}
+        {/* Titre 404 */}
         <h1 className="text-9xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
           404
         </h1>
 
-        {/* Message principal */}
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">
           Page introuvable
         </h2>
@@ -32,7 +32,7 @@ const NotFound: React.FC = () => {
           Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
         </p>
 
-        {/* Boutons d'action */}
+        {/* Bouton retour */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => navigate(-1)}

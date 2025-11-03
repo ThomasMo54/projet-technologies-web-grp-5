@@ -29,25 +29,22 @@ const SignupPage: React.FC = () => {
   const password = watch('password');
   const userType = watch('type');
 
+  /**
+   * Valide les critères de sécurité du mot de passe
+   */
   const validatePassword = (value: string) => {
-    if (value.length < 8) {
-      return 'Le mot de passe doit contenir au moins 8 caractères';
-    }
-    if (value.length > 50) {
-      return 'Le mot de passe ne peut pas dépasser 50 caractères';
-    }
-    if (!/[A-Z]/.test(value)) {
-      return 'Le mot de passe doit contenir au moins une majuscule';
-    }
-    if (!/[a-z]/.test(value)) {
-      return 'Le mot de passe doit contenir au moins une minuscule';
-    }
-    if (!/[0-9]/.test(value)) {
-      return 'Le mot de passe doit contenir au moins un chiffre';
-    }
+    if (value.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères';
+    if (value.length > 50) return 'Le mot de passe ne peut pas dépasser 50 caractères';
+    if (!/[A-Z]/.test(value)) return 'Le mot de passe doit contenir au moins une majuscule';
+    if (!/[a-z]/.test(value)) return 'Le mot de passe doit contenir au moins une minuscule';
+    if (!/[0-9]/.test(value)) return 'Le mot de passe doit contenir au moins un chiffre';
     return true;
   };
 
+  /**
+   * Gère la soumission du formulaire d'inscription
+   * Crée le compte puis connecte automatiquement l'utilisateur
+   */
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
     try {
@@ -59,7 +56,6 @@ const SignupPage: React.FC = () => {
         type: data.type
       });
       
-      // Stocker le token JWT (access_token)
       localStorage.setItem('token', token);
       setUser(user);
       toast.success('Compte créé avec succès !');
@@ -75,11 +71,9 @@ const SignupPage: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 w-full py-8">
       <div className="relative w-full max-w-2xl mx-auto p-4 sm:p-0">
-        {/* Gradient Header */}
         <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
         
         <div className="bg-white dark:bg-gray-800 rounded-b-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-          {/* Logo & Title */}
           <div className="flex items-center justify-center mb-8">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
               <UserPlus className="text-white" size={24} />
@@ -87,46 +81,31 @@ const SignupPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Créer un compte</h2>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* User Type Selection */}
+            {/* Sélection du type d'utilisateur (étudiant/enseignant) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Je suis un(e)
               </label>
               <div className="grid grid-cols-2 gap-4">
-                <label
-                  className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    userType === 'student'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-blue-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value="student"
-                    {...register('type', { required: true })}
-                    className="sr-only"
-                  />
+                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  userType === 'student'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300'
+                }`}>
+                  <input type="radio" value="student" {...register('type', { required: true })} className="sr-only" />
                   <GraduationCap className={userType === 'student' ? 'text-blue-500' : 'text-gray-400'} size={24} />
                   <span className={`ml-2 font-medium ${userType === 'student' ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     Étudiant
                   </span>
                 </label>
 
-                <label
-                  className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    userType === 'teacher'
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-purple-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value="teacher"
-                    {...register('type', { required: true })}
-                    className="sr-only"
-                  />
+                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  userType === 'teacher'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-purple-300'
+                }`}>
+                  <input type="radio" value="teacher" {...register('type', { required: true })} className="sr-only" />
                   <BookOpen className={userType === 'teacher' ? 'text-purple-500' : 'text-gray-400'} size={24} />
                   <span className={`ml-2 font-medium ${userType === 'teacher' ? 'text-purple-700 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     Enseignant
@@ -135,9 +114,8 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Name Inputs - Grid */}
+            {/* Champs prénom et nom */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* First Name */}
               <div>
                 <label htmlFor="firstname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Prénom
@@ -162,7 +140,6 @@ const SignupPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Last Name */}
               <div>
                 <label htmlFor="lastname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nom
@@ -188,7 +165,7 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Email Input */}
+            {/* Champ email avec validation */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
@@ -216,9 +193,8 @@ const SignupPage: React.FC = () => {
               )}
             </div>
 
-            {/* Password Inputs - Grid */}
+            {/* Champs mot de passe avec validation forte */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mot de passe
@@ -243,7 +219,6 @@ const SignupPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirmer le mot de passe
@@ -269,7 +244,7 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Password Requirements */}
+            {/* Exigences du mot de passe */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-xs text-blue-800 dark:text-blue-300 font-medium mb-2">Le mot de passe doit contenir :</p>
               <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
@@ -280,7 +255,7 @@ const SignupPage: React.FC = () => {
               </ul>
             </div>
 
-            {/* Submit Button */}
+            {/* Bouton de soumission avec état de chargement */}
             <Button
               type="submit"
               disabled={isLoading}
@@ -300,7 +275,7 @@ const SignupPage: React.FC = () => {
             </Button>
           </form>
 
-          {/* Additional Links */}
+          {/* Lien vers la page de connexion */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Vous avez déjà un compte ?{' '}
@@ -310,9 +285,6 @@ const SignupPage: React.FC = () => {
             </p>
           </div>
         </div>
-
-        {/* Hover Effect Overlay */}
-        <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
       </div>
     </div>
   );

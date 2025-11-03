@@ -14,6 +14,14 @@ interface ChapterListProps {
   courseId: string;
 }
 
+/**
+ * Liste des chapitres (enseignant)
+ * Fonctionnalités :
+ * - Affichage du contenu HTML (dangerouslySetInnerHTML)
+ * - Édition et suppression
+ * - Intégration du QuizSection
+ * - Confirmation avant suppression
+ */
 const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
   const queryClient = useQueryClient();
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -24,6 +32,9 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
     setEditModalOpen(true);
   };
 
+  /**
+   * Suppression avec confirmation
+   */
   const handleDelete = async (id: string) => {
     const isConfirmed = window.confirm(
       'Are you sure you want to delete this chapter? This action cannot be undone.'
@@ -64,18 +75,20 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
               key={chapter.uuid}
               className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:shadow-lg"
             >
+              {/* === Bandeau décoratif === */}
               <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
               <div className="p-4">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   {chapter.title}
                 </h4>
 
-                {/* Affichage du contenu HTML */}
+                {/* === Contenu HTML du chapitre === */}
                 <div 
                   className="prose prose-sm dark:prose-invert max-w-none mb-4 text-gray-700 dark:text-gray-300"
                   dangerouslySetInnerHTML={{ __html: chapter.content || '<p>No content available</p>' }}
                 />
 
+                {/* === Actions === */}
                 <div className="flex flex-col sm:flex-row gap-2 mb-4">
                   <Button
                     onClick={() => handleEdit(chapter)}
@@ -93,6 +106,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
                   </Button>
                 </div>
 
+                {/* === Quiz du chapitre === */}
                 <QuizSection courseId={courseId} chapterId={chapter.uuid} />
               </div>
               <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-lg transition-all duration-300 pointer-events-none"></div>
@@ -105,6 +119,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, courseId }) => {
         )}
       </ul>
 
+      {/* === Modal d'édition === */}
       <Modal isOpen={editModalOpen} onClose={handleClose} title="Edit Chapter" width="5xl">
         {selectedChapter && (
           <ChapterForm 

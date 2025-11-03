@@ -11,6 +11,13 @@ import Button from '../common/Button';
 import type { ICourse } from '../../interfaces/course';
 import { PlusCircle } from 'lucide-react';
 
+/**
+ * Tableau de bord des cours de l'enseignant
+ * Fonctionnalités :
+ * - Liste des cours créés
+ * - Création, édition, suppression
+ * - Rafraîchissement après actions
+ */
 const CourseList: React.FC = () => {
   const { user } = useAuth();
   const { data: courses, isLoading, refetch } = useQuery({
@@ -70,12 +77,12 @@ const CourseList: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
             <CourseCard
-  key={course.uuid}
-  course={course}
-  onEdit={() => handleEdit(course)}
-  onDelete={() => handleDelete(course.uuid)}
-  onPublishedChange={() => refetch()}
-/>
+              key={course.uuid}
+              course={course}
+              onEdit={() => handleEdit(course)}
+              onDelete={() => handleDelete(course.uuid)}
+              onPublishedChange={() => refetch()}
+            />
           ))}
         </div>
       ) : (

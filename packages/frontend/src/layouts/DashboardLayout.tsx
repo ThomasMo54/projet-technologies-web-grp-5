@@ -19,6 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
+  // Navigation différente selon le rôle (professeur ou étudiant)
   const navItems = role === 'teacher' ? [
     { path: '/teacher/courses', label: 'My Courses', icon: BookOpen },
     { path: '/teacher/stats', label: 'Statistics', icon: BarChart3 },
@@ -29,6 +30,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const isActive = (path: string) => location.pathname === path;
 
+  /**
+   * Gère la mise à jour du profil utilisateur
+   * Vérifie le mot de passe actuel si un changement de mot de passe est demandé
+   */
   const handleUpdateUser = async (updates: {
     firstname: string;
     lastname: string;
@@ -37,7 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   }) => {
     if (!user) throw new Error('User not found');
 
-    // Si un changement de mot de passe est demandé, vérifier le mot de passe actuel
+    // Vérification du mot de passe actuel si changement demandé
     if (updates.password && updates.currentPassword) {
       const isPasswordValid = await verifyCurrentPassword(user.email, updates.currentPassword);
       if (!isPasswordValid) {
@@ -45,21 +50,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       }
     }
 
-    // Préparer les données à envoyer au backend
     const dataToUpdate: any = {
       firstname: updates.firstname,
       lastname: updates.lastname,
     };
 
-    // Ajouter le nouveau mot de passe si fourni
     if (updates.password) {
       dataToUpdate.password = updates.password;
     }
 
-    // Mettre à jour l'utilisateur
     const updatedUser = await updateUser(user.id, dataToUpdate);
     
-    // Mettre à jour le contexte d'authentification (sauf le mot de passe)
+    // Mise à jour du contexte d'authentification
     updateAuthUser({
       ...user,
       firstname: updatedUser.firstname,
@@ -67,19 +69,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     });
   };
 
+  /**
+   * Supprime le compte utilisateur après vérification du mot de passe
+   */
   const handleDeleteUser = async (password: string) => {
     if (!user) throw new Error('User not found');
     
-    // Vérifier le mot de passe avant de supprimer
     const isPasswordValid = await verifyCurrentPassword(user.email, password);
     if (!isPasswordValid) {
       throw new Error('Password is incorrect');
     }
 
-    // Supprimer l'utilisateur
     await deleteUser(user.id);
     
-    // Déconnecter et rediriger
     setProfileModalOpen(false);
     logout();
     navigate('/login');
@@ -87,7 +89,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile Menu Button */}
+      {/* Bouton menu mobile */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
@@ -96,7 +98,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Overlay for mobile */}
+      {/* Overlay pour fermer la sidebar en cliquant à l'extérieur */}
       {sidebarOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
@@ -114,7 +116,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           flex flex-col
         `}
       >
-        {/* Logo & Title */}
+        {/* Logo & Titre */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -158,7 +160,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           </ul>
         </nav>
 
-        {/* User Profile - CLIQUABLE */}
+        {/* Profil utilisateur cliquable */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setProfileModalOpen(true)}
@@ -187,14 +189,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Contenu principal */}
       <main className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>
 
-      {/* Profile Modal */}
+      {/* Modal de paramètres du profil */}
       {user && (
         <Modal
           isOpen={profileModalOpen}

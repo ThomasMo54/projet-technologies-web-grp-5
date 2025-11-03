@@ -13,7 +13,7 @@ interface QuizSectionProps {
   chapterId: string;
 }
 
-// Composant pour visualiser le quiz
+// === Quiz Viewer (visualisation par enseignant) ===
 const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onClose }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
@@ -60,7 +60,7 @@ const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onCl
           </span>
         </div>
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          {percentage >= 70 ? '🎉 Félicitations !' : '📚 Continuez à apprendre !'}
+          {percentage >= 70 ? 'Félicitations !' : 'Continuez à apprendre !'}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Vous avez obtenu {score} sur {totalQuestions} bonnes réponses
@@ -77,7 +77,6 @@ const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onCl
 
   return (
     <div className="p-6">
-      {/* Progression */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
           <span>Question {currentQuestion + 1} sur {totalQuestions}</span>
@@ -91,13 +90,11 @@ const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onCl
         </div>
       </div>
 
-      {/* Question */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           {question.text}
         </h3>
 
-        {/* Options */}
         <div className="space-y-3">
           {question.options.map((option, index) => (
             <button
@@ -126,7 +123,6 @@ const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onCl
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
         <Button
           onClick={onClose}
@@ -146,13 +142,19 @@ const QuizViewer: React.FC<{ quiz: IQuiz; onClose: () => void }> = ({ quiz, onCl
   );
 };
 
+/**
+ * Section Quiz par chapitre (enseignant)
+ * Fonctionnalités :
+ * - Ajout, édition, suppression, consultation
+ * - Visualisation interactive (simulateur)
+ * - Rafraîchissement des données
+ */
 const QuizSection: React.FC<QuizSectionProps> = ({ courseId, chapterId }) => {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [viewingQuiz, setViewingQuiz] = useState(false);
 
-  // Charger le quiz du chapitre
   const { data: quiz, isLoading } = useQuery({
     queryKey: ['quiz', chapterId],
     queryFn: () => fetchQuizByChapter(chapterId),
@@ -239,25 +241,13 @@ const QuizSection: React.FC<QuizSectionProps> = ({ courseId, chapterId }) => {
               </div>
             </div>
             <div className="flex gap-2 ml-4">
-              <button
-                onClick={handleView}
-                className="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
-                title="Consulter"
-              >
+              <button onClick={handleView} className="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors" title="Consulter">
                 <Eye size={18} className="text-purple-600 dark:text-purple-400" />
               </button>
-              <button
-                onClick={handleEdit}
-                className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                title="Modifier"
-              >
+              <button onClick={handleEdit} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors" title="Modifier">
                 <Edit size={18} className="text-blue-600 dark:text-blue-400" />
               </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                title="Supprimer"
-              >
+              <button onClick={handleDelete} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Supprimer">
                 <Trash2 size={18} className="text-red-600 dark:text-red-400" />
               </button>
             </div>
@@ -270,28 +260,11 @@ const QuizSection: React.FC<QuizSectionProps> = ({ courseId, chapterId }) => {
         </div>
       )}
 
-      {/* Modal pour ajouter/modifier le quiz */}
-      <Modal 
-        isOpen={modalOpen} 
-        onClose={handleClose} 
-        title={isEdit ? 'Modifier le quiz' : 'Ajouter un quiz'}
-        width="3xl"
-      >
-        <QuizForm 
-          courseId={courseId} 
-          chapterId={chapterId} 
-          quiz={isEdit ? (quiz ?? undefined) : undefined}
-          onSuccess={handleSuccess} 
-        />
+      <Modal isOpen={modalOpen} onClose={handleClose} title={isEdit ? 'Modifier le quiz' : 'Ajouter un quiz'} width="3xl">
+        <QuizForm courseId={courseId} chapterId={chapterId} quiz={isEdit ? (quiz ?? undefined) : undefined} onSuccess={handleSuccess} />
       </Modal>
 
-      {/* Modal pour consulter le quiz */}
-      <Modal 
-        isOpen={viewingQuiz} 
-        onClose={handleCloseViewer} 
-        title={quiz?.title || 'Quiz'}
-        width="3xl"
-      >
+      <Modal isOpen={viewingQuiz} onClose={handleCloseViewer} title={quiz?.title || 'Quiz'} width="3xl">
         {quiz && <QuizViewer quiz={quiz} onClose={handleCloseViewer} />}
       </Modal>
     </div>

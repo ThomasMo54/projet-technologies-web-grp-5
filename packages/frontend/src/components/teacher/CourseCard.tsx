@@ -9,12 +9,24 @@ interface CourseCardProps {
   course: ICourse;
   onEdit: () => void;
   onDelete: () => void;
-  onPublishedChange?: () => void;
+  onPublishedChange?: () => void; // Rafraîchit la liste après publication
 }
 
+/**
+ * Carte de cours pour l'enseignant
+ * Fonctionnalités :
+ * - Affichage titre, description, tags, stats
+ * - Boutons : Voir, Éditer, Supprimer, Publier (si non publié)
+ * - Publication avec feedback toast
+ * - Effets visuels au survol
+ */
 const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPublishedChange }) => {
   const [isPublishing, setIsPublishing] = useState(false);
 
+  /**
+   * Publie le cours via API
+   * Invalide les queries via callback
+   */
   const handlePublish = async () => {
     try {
       setIsPublishing(true);
@@ -30,16 +42,19 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPub
 
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* === Bandeau décoratif === */}
       <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
       <div className="p-6">
+        {/* === Titre === */}
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {course.title}
         </h3>
+        {/* === Description === */}
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">
           {course.description || 'No description available'}
         </p>
 
-        {/* Tags */}
+        {/* === Tags === */}
         {course.tags && course.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {course.tags.slice(0, 3).map((tag, index) => (
@@ -59,7 +74,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPub
           </div>
         )}
 
-        {/* Stats */}
+        {/* === Statistiques === */}
         <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <Users size={16} className="text-purple-500" />
@@ -73,7 +88,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPub
           </div>
         </div>
 
-        {/* Actions */}
+        {/* === Actions === */}
         <div className="flex flex-wrap sm:flex-nowrap gap-2">
           <Link
             to={`/teacher/courses/${course.uuid}`}
@@ -113,6 +128,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEdit, onDelete, onPub
         </div>
       </div>
 
+      {/* Effet de bordure au survol */}
       <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
     </div>
   );

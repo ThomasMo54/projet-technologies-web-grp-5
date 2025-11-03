@@ -8,7 +8,12 @@ import type { CreateCourseDto, UpdateCourseDto, ICourse } from '../../interfaces
 import { toast } from 'react-toastify';
 import { FileText, Tag } from 'lucide-react';
 
-// Schéma Zod
+/**
+ * Schéma de validation Zod pour le formulaire de cours
+ * - title : requis, minimum 5 caractères (sans espaces)
+ * - description : optionnel
+ * - tags : optionnel (chaîne séparée par virgules)
+ */
 const courseSchema = z.object({
   title: z
     .string()
@@ -23,11 +28,16 @@ const courseSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 
 interface CourseFormProps {
-  course?: ICourse;
-  creatorId?: string;
-  onSuccess: () => void;
+  course?: ICourse; // Cours existant pour le mode édition
+  creatorId?: string; // ID du créateur (requis en création)
+  onSuccess: () => void; // Callback après succès (fermeture, rafraîchissement, etc.)
 }
 
+/**
+ * Composant de formulaire pour créer ou modifier un cours
+ * Utilise React Hook Form + Zod pour la validation
+ * Gère les tags sous forme de chaîne séparée par virgules
+ */
 const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess }) => {
   const {
     register,
@@ -35,22 +45,28 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
     trigger,
     formState: { errors, isValid, isSubmitting },
   } = useForm<CourseFormData>({
-    resolver: zodResolver(courseSchema),
-    mode: 'onChange',
+    resolver: zodResolver(courseSchema), // Validation avec Zod
+    mode: 'onChange', // Validation en temps réel
     defaultValues: {
       title: course?.title || '',
       description: course?.description || '',
-      tags: course?.tags?.join(', ') || '',
+      tags: course?.tags?.join(', ') || '', // Convertit le tableau en chaîne
     },
   });
 
+  /**
+   * Gère la soumission du formulaire
+   * Transforme les tags en tableau, appelle l'API selon le mode
+   */
   const onSubmit = async (data: CourseFormData) => {
     try {
+      // Convertit la chaîne de tags en tableau propre
       const tagsArray = data.tags
         ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
         : [];
 
       if (course) {
+        // Mode édition
         const updateData: UpdateCourseDto = {
           title: data.title,
           description: data.description,
@@ -59,6 +75,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
         };
         await updateCourse(course.uuid, updateData);
       } else {
+        // Mode création
         if (!creatorId) {
           toast.error('Creator ID is required');
           return;
@@ -75,7 +92,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
         };
         await createCourse(createData);
       }
-      onSuccess();
+      onSuccess(); // Callback de succès
     } catch (error: any) {
       console.error('Error saving course:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to save course';
@@ -83,6 +100,9 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
     }
   };
 
+  /**
+   * Utilitaire pour les classes de bordure (erreur vs focus normal)
+   */
   const getBorderClass = (field: 'title' | 'tags') => {
     return errors[field]
       ? '!border-red-500 !ring-red-500 ring-2'
@@ -91,18 +111,20 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
 
   return (
     <div className="relative max-w-3xl mx-auto bg-white dark:bg-gray-3 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+      {/* Bandeau décoratif en haut */}
       <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
 
+      {/* Formulaire principal */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-6">
 
-        {/* Title */}
+        {/* === Champ Titre === */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             <FileText size={18} />
             Title *
           </label>
           <input
-            {...register('title', { onChange: () => trigger('title') })}
+            {...register('title', { onChange: () => trigger('title') })} // Re-valide au changement
             className={`w-full px-4 py-3 border-2 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 ${getBorderClass(
               'title'
             )}`}
@@ -113,7 +135,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           )}
         </div>
 
-        {/* Description */}
+        {/* === Champ Description === */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             <FileText size={18} />
@@ -127,7 +149,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           />
         </div>
 
-        {/* Tags */}
+        {/* === Champ Tags === */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             <Tag size={18} />
@@ -145,7 +167,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
           </p>
         </div>
 
-        {/* Submit Button */}
+        {/* === Bouton de Soumission === */}
         <div className="flex gap-2 pt-4">
           <Button
             type="submit"
@@ -166,6 +188,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, creatorId, onSuccess })
         </div>
       </form>
 
+      {/* Effet de bordure au survol (décoratif) */}
       <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none -z-10"></div>
     </div>
   );

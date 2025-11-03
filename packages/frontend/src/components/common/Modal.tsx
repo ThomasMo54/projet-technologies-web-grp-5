@@ -2,15 +2,20 @@ import React from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-  width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'full'; // Nouvelle prop pour la largeur
+  isOpen: boolean; // État d'ouverture/fermeture de la modale
+  onClose: () => void; // Fonction appelée lors de la fermeture
+  title: string; // Titre affiché en haut de la modale
+  children: React.ReactNode; // Contenu principal de la modale
+  width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'full'; // Largeur personnalisée (Tailwind)
 }
 
+/**
+ * Composant Modal réutilisable
+ * Affiche une fenêtre modale centrée avec animation fluide
+ * Utilise Headless UI pour l’accessibilité et les transitions
+ */
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, width = 'md' }) => {
-  // Mapping des tailles Tailwind
+  // Mapping des tailles Tailwind pour contrôler la largeur de la modale
   const widthClasses = {
     sm: 'max-w-sm',
     md: 'max-w-md',
@@ -25,11 +30,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, width =
     full: 'max-w-full',
   };
 
-  const selectedWidth = widthClasses[width] || widthClasses.md;
+  const selectedWidth = widthClasses[width] || widthClasses.md; // Fallback sur 'md'
 
   return (
     <Transition show={isOpen}>
+      {/* Dialog principal - gère l'accessibilité (focus trap, ARIA, etc.) */}
       <Dialog onClose={onClose} className="relative z-50">
+        
+        {/* === Fond sombre semi-transparent (overlay) === */}
         <Transition.Child
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -40,6 +48,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, width =
         >
           <div className="fixed inset-0 bg-black/30" />
         </Transition.Child>
+
+        {/* Conteneur centré avec défilement si nécessaire */}
         <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
           <Transition.Child
             enter="ease-out duration-300"
@@ -49,10 +59,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, width =
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
+            {/* Panneau de la modale */}
             <Dialog.Panel
               className={`w-full ${selectedWidth} rounded bg-white p-8 dark:bg-gray-800 max-h-screen overflow-y-auto`}
             >
+              {/* Titre de la modale */}
               <Dialog.Title className="text-lg font-bold mb-4">{title}</Dialog.Title>
+              
+              {/* Contenu personnalisé passé via children */}
               {children}
             </Dialog.Panel>
           </Transition.Child>

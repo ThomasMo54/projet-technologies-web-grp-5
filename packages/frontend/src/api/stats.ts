@@ -18,25 +18,33 @@ export interface IUserStats {
   courses: ICourseProgress[];
 }
 
-// Récupérer les stats d'un cours
+/**
+ * Récupère les statistiques d'un cours (inscriptions, progression globale, etc.)
+ */
 export const fetchCourseStats = async (courseId: string) => {
   const response = await api.get(`/courses/${courseId}/stats`);
   return response.data;
 };
 
-// Récupérer la progression d'un utilisateur dans un cours
+/**
+ * Récupère la progression d'un utilisateur spécifique dans un cours
+ */
 export const fetchUserCourseProgress = async (courseId: string, userId: string) => {
   const response = await api.get(`/courses/${courseId}/progress/${userId}`);
   return response.data;
 };
 
-// Récupérer les stats globales d'un utilisateur
+/**
+ * Récupère les statistiques globales d'un utilisateur (tous ses cours)
+ */
 export const fetchUserGlobalStats = async (userId: string): Promise<IUserStats> => {
   const response = await api.get(`/users/${userId}/stats`);
   return response.data;
 };
 
-// Récupérer la progression globale d'un utilisateur
+/**
+ * Récupère la progression détaillée d'un utilisateur
+ */
 export const fetchUserProgress = async (userId: string) => {
   const response = await api.get(`/users/${userId}/progress`);
   return response.data;

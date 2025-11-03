@@ -9,21 +9,34 @@ import { useAuth } from '../../hooks/useAuth';
 import AISummaryDisplay from './AISummaryDisplay';
 
 interface StudentChapterListProps {
-  chapters: IChapter[];
-  selectedChapterId: string | null;
-  onSelectChapter: (id: string) => void;
+  chapters: IChapter[]; // Liste des chapitres du cours
+  selectedChapterId: string | null; // ID du chapitre actuellement sélectionné
+  onSelectChapter: (id: string) => void; // Fonction pour changer de chapitre
 }
 
+/**
+ * Composant de liste des chapitres pour l'étudiant
+ * Affiche chaque chapitre avec :
+ * - Statut (terminé, quiz passé, score)
+ * - Aperçu du contenu
+ * - Bouton AI Summary (si disponible)
+ * - Contenu complet expansible
+ * Gère les requêtes React Query pour quiz et réponses utilisateur
+ */
 const StudentChapterList: React.FC<StudentChapterListProps> = ({ 
   chapters, 
   selectedChapterId, 
   onSelectChapter 
 }) => {
   const { user } = useAuth();
-  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
-  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [selectedSummary, setSelectedSummary] = useState<string | null>(null);
+  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null); // Chapitre expansé
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false); // Modale de résumé
+  const [selectedSummary, setSelectedSummary] = useState<string | null>(null); // Résumé sélectionné
 
+  /**
+   * Récupère le quiz associé à chaque chapitre
+   * Utilisé pour déterminer s'il y a un quiz et si l'utilisateur l'a passé
+   */
   const quizzes = chapters.map(chapter => ({
     chapterId: chapter.uuid,
     ...useQuery({
@@ -32,6 +45,10 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
     }),
   }));
 
+  /**
+   * Récupère les réponses de l'utilisateur pour chaque quiz
+   * Exécuté uniquement si l'utilisateur est connecté
+   */
   const userAnswers = chapters.map(chapter => ({
     chapterId: chapter.uuid,
     ...useQuery({
@@ -41,10 +58,17 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
         if (!quiz || !user?.id) return null;
         return fetchUserQuizAnswer(quiz.uuid, user.id);
       },
-      enabled: !!user?.id,
+      enabled: !!user?.id, // Désactivé si pas d'utilisateur
     }),
   }));
 
+  /**
+   * Calcule le statut d'un chapitre
+   * - completed : true si pas de quiz ou si quiz passé (score >= 70)
+   * - hasQuiz : présence d'un quiz
+   * - quizPassed : quiz réussi
+   * - score : score obtenu
+   */
   const getChapterStatus = (chapterId: string) => {
     const quizData = quizzes.find(q => q.chapterId === chapterId);
     const userAnswerData = userAnswers.find(a => a.chapterId === chapterId);
@@ -61,19 +85,25 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
     };
   };
 
+  /**
+   * Ouvre la modale avec le résumé AI du chapitre
+   */
   const handleViewSummary = (summary: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Empêche la sélection du chapitre
     setSelectedSummary(summary);
     setSummaryModalOpen(true);
   };
 
-  // Function to strip HTML tags and get plain text
+  /**
+   * Convertit le HTML du contenu en texte brut (pour l'aperçu)
+   */
   const getPlainText = (html: string) => {
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
   };
 
+  // === État vide : aucun chapitre ===
   if (chapters.length === 0) {
     return (
       <div className="text-center py-12">
@@ -87,6 +117,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
 
   return (
     <>
+      {/* === Liste des chapitres === */}
       <div className="space-y-3">
         {chapters.map((chapter, index) => {
           const status = getChapterStatus(chapter.uuid);
@@ -95,6 +126,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
 
           return (
             <div key={chapter.uuid}>
+              {/* === Bouton du chapitre (cliquable) === */}
               <button
                 onClick={() => {
                   onSelectChapter(chapter.uuid);
@@ -107,6 +139,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                 } hover:shadow-md`}
               >
                 <div className="flex items-start gap-4">
+                  {/* === Icône de statut (numéro ou coche) === */}
                   <div className="flex-shrink-0 mt-1">
                     {status.completed ? (
                       <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full">
@@ -119,6 +152,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                     )}
                   </div>
 
+                  {/* === Informations du chapitre === */}
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className={`text-lg font-semibold ${
@@ -128,6 +162,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                       }`}>
                         {chapter.title}
                       </h4>
+                      {/* Bouton AI Summary */}
                       {chapter.summary && (
                         <button
                           onClick={(e) => handleViewSummary(chapter.summary!, e)}
@@ -138,12 +173,14 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                           AI Summary
                         </button>
                       )}
+                      {/* Badge : Terminé */}
                       {status.completed && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
                           <Trophy size={12} />
                           Completed
                         </span>
                       )}
+                      {/* Badge : Score */}
                       {status.score !== undefined && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full">
                           <Award size={12} />
@@ -151,6 +188,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                         </span>
                       )}
                     </div>
+                    {/* Aperçu du contenu */}
                     {chapter.content && (
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                         {getPlainText(chapter.content).substring(0, 150)}...
@@ -158,6 +196,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                     )}
                   </div>
 
+                  {/* === Flèche d'expansion === */}
                   <div className="flex-shrink-0">
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
@@ -173,6 +212,7 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
                 </div>
               </button>
 
+              {/* === Contenu expansé === */}
               {isExpanded && (
                 <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700">
                   <StudentChapterContent 
@@ -185,17 +225,18 @@ const StudentChapterList: React.FC<StudentChapterListProps> = ({
         })}
       </div>
 
+      {/* === Modale de résumé AI === */}
       <Modal
-  isOpen={summaryModalOpen}
-  onClose={() => {
-    setSummaryModalOpen(false);
-    setSelectedSummary(null);
-  }}
-  title="Chapter Summary"
-  width="3xl"
->
-  <AISummaryDisplay summary={selectedSummary || 'No summary available for this chapter.'} />
-</Modal>
+        isOpen={summaryModalOpen}
+        onClose={() => {
+          setSummaryModalOpen(false);
+          setSelectedSummary(null);
+        }}
+        title="Chapter Summary"
+        width="3xl"
+      >
+        <AISummaryDisplay summary={selectedSummary || 'No summary available for this chapter.'} />
+      </Modal>
     </>
   );
 };

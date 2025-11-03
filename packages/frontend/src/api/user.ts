@@ -1,8 +1,10 @@
 import api from './axios';
 import type { IUser } from '../interfaces/user';
 
-
-// Vérifier le mot de passe actuel
+/**
+ * Vérifie si le mot de passe actuel est correct en tentant une connexion
+ * @returns true si le mot de passe est valide, false sinon
+ */
 export const verifyCurrentPassword = async (email: string, password: string): Promise<boolean> => {
   try {
     await api.post('/auth/login', { email, password });
@@ -12,7 +14,10 @@ export const verifyCurrentPassword = async (email: string, password: string): Pr
   }
 };
 
-// Mettre à jour les informations de l'utilisateur
+/**
+ * Met à jour les informations de l'utilisateur
+ * Peut modifier le prénom, nom et/ou mot de passe
+ */
 export const updateUser = async (
   userId: string,
   updates: {
@@ -25,7 +30,9 @@ export const updateUser = async (
   return response.data;
 };
 
-// Supprimer le compte utilisateur
+/**
+ * Supprime définitivement le compte utilisateur
+ */
 export const deleteUser = async (userId: string): Promise<void> => {
   await api.delete(`/users/${userId}`);
 };

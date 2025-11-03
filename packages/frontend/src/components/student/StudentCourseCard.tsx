@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQueries } from '@tanstack/react-query';
 import type { ICourse } from '../../interfaces/course';
 import { Eye, BookMarked, Tag, User, LogOut } from 'lucide-react';
 import { unenrollCourse } from '../../api/courses';
+import { fetchChaptersByCourse } from '../../api/chapters';
+import { fetchQuizByChapter, fetchUserQuizAnswer } from '../../api/quizzes';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -15,10 +17,73 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
   const courseId = course.uuid;
   const [isUnrolling, setIsUnrolling] = useState(false);
   const queryClient = useQueryClient();
-  const progressPercentage = 45;
   const { user } = useAuth();
 
+  // === 1. Charger les chapitres ===
+  const { data: chapters = [] } = useQueries({
+    queries: [
+      {
+        queryKey: ['chapters', courseId],
+        queryFn: () => fetchChaptersByCourse(courseId),
+        staleTime: 1000 * 60, // 1 min
+      },
+    ],
+  })[0] || { data: [] };
 
+  // === 2. Charger les quizzes pour chaque chapitre ===
+  const quizzesQueries = useQueries({
+    queries: chapters.map((chapter: any) => ({
+      queryKey: ['quiz', chapter.uuid],
+      queryFn: () => fetchQuizByChapter(chapter.uuid),
+      enabled: !!chapter.uuid,
+    })),
+  });
+
+// === 3. Charger les réponses utilisateur pour chaque quiz ===
+const userAnswersQueries = useQueries({
+  queries: chapters.map((_: any, index: number) => {
+    const quiz = quizzesQueries[index]?.data;
+
+    return {
+      queryKey: ['userQuizAnswer', quiz?.uuid, user?.id],
+      queryFn: async () => {
+        // Double sécurité : on vérifie encore ici (au cas où)
+        if (!quiz || !user?.id) {
+          return null;
+        }
+        return fetchUserQuizAnswer(quiz.uuid, user.id);
+      },
+      enabled: !!quiz && !!user?.id,
+    };
+  }),
+});
+
+// === 4. Calculer la progression UNIQUEMENT sur les quizzes ===
+const calculateProgress = () => {
+  if (!chapters || chapters.length === 0) return 0;
+
+  let quizzesCompleted = 0;
+  let totalQuizzes = 0;
+
+  chapters.forEach((_: any, index: number) => {
+    const quiz = quizzesQueries[index]?.data;
+    const userAnswer = userAnswersQueries[index]?.data;
+
+    if (quiz) {
+      totalQuizzes++;
+      if (userAnswer && userAnswer.score >= 70) {
+        quizzesCompleted++;
+      }
+    }
+    // Chapitre sans quiz → ignoré
+  });
+
+  return totalQuizzes > 0 ? Math.round((quizzesCompleted / totalQuizzes) * 100) : 0;
+};
+
+const progressPercentage = calculateProgress();
+
+  // === Mutation de désinscription ===
   const unenrollMutation = useMutation({
     mutationFn: () => unenrollCourse(courseId, user!.id),
     onSuccess: () => {
@@ -39,16 +104,17 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
       setTimeout(() => setIsUnrolling(false), 1000);
     }
   };
-  
+
   return (
     <div className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* Barre de progression animée */}
       <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-        <div 
+        <div
           className="h-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500"
           style={{ width: `${progressPercentage}%` }}
         ></div>
       </div>
-      
+
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {course.title}
@@ -58,6 +124,7 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
           {course.description || 'No description available'}
         </p>
 
+        {/* Tags */}
         {course.tags && course.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {course.tags.slice(0, 3).map((tag, index) => (
@@ -77,6 +144,7 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
           </div>
         )}
 
+        {/* Métadonnées */}
         <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <BookMarked size={16} className="text-blue-500" />
@@ -90,6 +158,7 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
           </div>
         </div>
 
+        {/* Barre de progression détaillée */}
         <div className="mb-5 pb-5 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -100,13 +169,14 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
         </div>
 
+        {/* Boutons */}
         <div className="flex gap-2">
           <Link
             to={`/student/courses/${courseId}`}
@@ -115,13 +185,13 @@ const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ course }) => {
             <Eye size={16} />
             Continue Learning
           </Link>
+
           <button
             onClick={handleUnenroll}
-            disabled={isUnrolling}
+            disabled={isUnrolling || unenrollMutation.isPending}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Unenroll from this course"
           >
-            {isUnrolling ? (
+            {isUnrolling || unenrollMutation.isPending ? (
               <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <LogOut size={16} />

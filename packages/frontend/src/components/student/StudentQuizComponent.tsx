@@ -7,34 +7,55 @@ import { submitQuizAnswer, fetchUserQuizAnswer } from '../../api/quizzes';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 
+/** Props du composant Quiz pour étudiant */
 interface StudentQuizComponentProps {
+  /** Objet quiz complet */
   quiz: IQuiz;
+  /** Callback optionnel appelé après soumission (ex: pour stocker le score) */
   onComplete?: (score: number) => void;
+  /** Mode affichage résultats (dès le chargement) */
   viewResultsMode?: boolean;
 }
 
+/**
+ * Composant Quiz interactif pour étudiant
+ * 
+ * Fonctionnalités :
+ * - Passage question par question
+ * - Sélection unique par question
+ * - Soumission via API avec calcul du score
+ * - Affichage des résultats détaillés (corrections)
+ * - Bouton "Try Again" si échec
+ * - Le modal parent reste ouvert après soumission (on ne ferme plus via onComplete)
+ * 
+ * @component
+ */
 const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({ 
   quiz, 
   onComplete,
   viewResultsMode = false 
 }) => {
   const { user } = useAuth();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
-  const [showResults, setShowResults] = useState(viewResultsMode);
-  const [score, setScore] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // États locaux
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // Index question actuelle
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({}); // Réponses utilisateur
+  const [showResults, setShowResults] = useState(viewResultsMode); // Mode résultats
+  const [score, setScore] = useState(0); // Score final
+  const [isSubmitting, setIsSubmitting] = useState(false); // État soumission
 
   const questions: IQuestion[] = quiz.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
-  const passingScore = 70;
+  const passingScore = 70; // Seuil de réussite
 
+  // Récupère la réponse précédente (si existe)
   const { data: previousAnswer, isLoading } = useQuery({
     queryKey: ['quizAnswer', quiz.uuid, user?.id],
     queryFn: () => fetchUserQuizAnswer(quiz.uuid, user!.id),
     enabled: !!user?.id,
   });
 
+  // Charge les résultats précédents en mode viewResultsMode
   useEffect(() => {
     if (viewResultsMode && previousAnswer) {
       setScore(previousAnswer.score);
@@ -48,12 +69,14 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     }
   }, [viewResultsMode, previousAnswer]);
 
+  // Mutation pour soumettre le quiz
   const submitMutation = useMutation({
     mutationFn: (answers: number[]) => submitQuizAnswer(quiz.uuid, answers, user!.id),
     onSuccess: (data) => {
       setScore(data.score);
       setShowResults(true);
       toast.success(`Quiz submitted! Score: ${data.score}%`);
+      // Appel optionnel pour parent (ex: stocker score), sans fermer modal
       onComplete?.(data.score);
     },
     onError: () => {
@@ -62,6 +85,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     },
   });
 
+  /** Sélectionne une réponse pour la question actuelle */
   const handleSelectAnswer = (optionIndex: number) => {
     if (!showResults) {
       setSelectedAnswers(prev => ({
@@ -71,18 +95,21 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     }
   };
 
+  /** Passe à la question suivante */
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
   };
 
+  /** Retourne à la question précédente */
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
     }
   };
 
+  /** Soumet le quiz (toutes questions répondues) */
   const handleSubmit = () => {
     const answers = questions.map((_, index) => selectedAnswers[index] ?? -1);
     
@@ -95,6 +122,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     submitMutation.mutate(answers);
   };
 
+  /** Réinitialise pour repasser le quiz */
   const handleRetakeQuiz = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
@@ -102,6 +130,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     setScore(0);
   };
 
+  // Loader pendant fetch réponse précédente
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -110,13 +139,13 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     );
   }
 
-  // Mode consultation des résultats
+  // === MODE RÉSULTATS ===
   if (showResults) {
     const passed = score >= passingScore;
 
     return (
       <div className="space-y-6">
-        {/* Score Summary - Titre fixe */}
+        {/* Résumé score */}
         <div className="text-center space-y-6 max-h-[70vh] overflow-y-auto pr-2">
           {passed ? (
             <>
@@ -149,6 +178,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
           )}
         </div>
 
+        {/* Revue des réponses */}
         <div className="max-h-96 overflow-y-auto pr-2">
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -229,7 +259,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
           </div>
         </div>
         
-        {/* Bouton "Try Again" seulement si pas réussi */}
+        {/* Bouton recommencer si échec */}
         {!passed && (
           <div className="flex justify-center pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
@@ -244,7 +274,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
     );
   }
 
-  // Mode passer le quiz
+  // Pas de questions
   if (!currentQuestion) {
     return (
       <div className="text-center py-12">
@@ -257,8 +287,10 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
   const answeredCount = Object.keys(selectedAnswers).length;
   const isAllAnswered = answeredCount === questions.length;
 
+  // === MODE PASSAGE QUIZ ===
   return (
     <div className="space-y-6">
+      {/* Barre de progression */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -276,6 +308,7 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
         </div>
       </div>
 
+      {/* Question actuelle */}
       <div>
         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           {currentQuestion.text}
@@ -317,10 +350,12 @@ const StudentQuizComponent: React.FC<StudentQuizComponentProps> = ({
         </div>
       </div>
 
+      {/* Compteur réponses */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400">
         Answered: {answeredCount} / {questions.length}
       </div>
 
+      {/* Navigation */}
       <div className="flex gap-3 justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
         <Button
           onClick={handlePrevious}

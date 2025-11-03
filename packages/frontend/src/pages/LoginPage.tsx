@@ -7,16 +7,23 @@ import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 import { LogIn, Mail, Lock } from 'lucide-react';
 
+/** Données du formulaire de connexion */
 interface LoginForm {
   email: string;
   password: string;
 }
 
+/**
+ * Page de connexion utilisateur
+ * 
+ * Gère l'authentification et redirige selon le rôle (teacher/student)
+ */
 const LoginPage: React.FC = () => {
   const { register, handleSubmit } = useForm<LoginForm>();
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
+  /** Soumet le formulaire et connecte l'utilisateur */
   const onSubmit = async (data: LoginForm) => {
     try {
       const { token, user } = await login(data.email, data.password);
@@ -31,11 +38,11 @@ const LoginPage: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
       <div className="relative w-full max-w-md mx-auto p-4 sm:p-0">
-        {/* Gradient Header */}
+        {/* Barre de dégradé décorative */}
         <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-t-xl"></div>
         
         <div className="bg-white dark:bg-gray-800 rounded-b-xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-          {/* Logo & Title */}
+          {/* En-tête */}
           <div className="flex items-center justify-center mb-8">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
               <LogIn className="text-white" size={24} />
@@ -43,9 +50,9 @@ const LoginPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome Back</h2>
           </div>
 
-          {/* Form */}
+          {/* Formulaire */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Input */}
+            {/* Email */}
             <div className="relative">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
@@ -63,7 +70,7 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Mot de passe */}
             <div className="relative">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
@@ -81,7 +88,7 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Bouton de connexion */}
             <Button
               type="submit"
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg py-3 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -91,7 +98,7 @@ const LoginPage: React.FC = () => {
             </Button>
           </form>
 
-          {/* Additional Links */}
+          {/* Lien d'inscription */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{' '}
@@ -102,7 +109,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Hover Effect Overlay */}
+        {/* Effet de survol */}
         <div className="absolute inset-0 border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all duration-300 pointer-events-none"></div>
       </div>
     </div>
