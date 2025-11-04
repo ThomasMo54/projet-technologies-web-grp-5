@@ -23,7 +23,9 @@ export class UsersController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto.email, createUserDto.password, createUserDto.lastname, createUserDto.firstname, createUserDto.type);
+    const user = await this.usersService.createUser(createUserDto.email, createUserDto.password, createUserDto.lastname, createUserDto.firstname, createUserDto.type);
+    const { password, ...result } = user.toObject();
+    return result;
   }
 
   @Get(':id')

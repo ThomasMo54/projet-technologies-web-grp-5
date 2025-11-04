@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { UserType } from "./user-type.enum";
+import { UserType } from "./type/user-type.enum";
 import { v4 as uuidv4 } from 'uuid';
 
 @Schema()

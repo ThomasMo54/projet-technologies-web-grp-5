@@ -18,6 +18,8 @@ import { Chapter } from './chapter.schema';
 import { CoursesService } from '../courses/courses.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Quiz } from "../quizzes/quiz.schema";
+import { UserTypes } from "../users/type/user-type.decorator";
+import { UserType } from "../users/type/user-type.enum";
 
 
 @Controller('chapters')
@@ -28,6 +30,7 @@ export class ChaptersController {
   ) {}
 
   @Post()
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createChapterDto: CreateChapterDto, @Request() req: any): Promise<Chapter> {
     const course = await this.coursesService.findCourseById(createChapterDto.courseId);
@@ -63,6 +66,7 @@ export class ChaptersController {
   }
 
   @Put(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async update(@Param('id') id: string, @Body() updateChapterDto: UpdateChapterDto, @Request() req: any): Promise<Chapter | null> {
     const chapter = await this.chaptersService.findChapterById(id);
@@ -73,6 +77,7 @@ export class ChaptersController {
   }
 
   @Delete(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: string, @Request() req: any): Promise<Chapter | null> {
     const chapter = await this.chaptersService.findChapterById(id);

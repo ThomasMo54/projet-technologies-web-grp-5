@@ -12,7 +12,7 @@ import { Course } from './course.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UsersService } from '../users/users.service';
-import { UserType } from "../users/user-type.enum";
+import { UserType } from "../users/type/user-type.enum";
 import { Chapter } from "../chapters/chapter.schema";
 import { ChaptersService } from "../chapters/chapters.service";
 import { CommentsService } from "../comments/comments.service";

@@ -20,6 +20,8 @@ import { AddRemoveStudentsDto } from "./dto/add-remove-students.dto";
 import { Chapter } from "../chapters/chapter.schema";
 import { Comment } from "../comments/comment.schema";
 import { OllamaService } from "../ollama/ollama.service";
+import { UserType } from "../users/type/user-type.enum";
+import { UserTypes } from "../users/type/user-type.decorator";
 
 @Controller('courses')
 export class CoursesController {
@@ -29,6 +31,7 @@ export class CoursesController {
   ) {}
 
   @Post()
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createCourseDto: CreateCourseDto, @Request() req: any): Promise<Course> {
     if (req.user.uuid !== createCourseDto.creatorId) {
@@ -101,6 +104,7 @@ export class CoursesController {
   }
 
   @Put(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto, @Request() req: any): Promise<Course | null> {
     const course = await this.coursesService.findCourseById(id);
@@ -124,6 +128,7 @@ export class CoursesController {
   }
 
   @Delete(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: string, @Request() req: any): Promise<Course | null> {
     const course = await this.coursesService.findCourseById(id);

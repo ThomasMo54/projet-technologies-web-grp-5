@@ -18,6 +18,8 @@ import { Quiz } from './quiz.schema';
 import { AuthGuard } from '@nestjs/passport';
 import { QuizAnswer } from "./quiz-answer.schema";
 import { CreateQuizAnswerDto } from "./dto/create-quiz-answer.dto";
+import { UserTypes } from "../users/type/user-type.decorator";
+import { UserType } from "../users/type/user-type.enum";
 
 
 @Controller('quizzes')
@@ -27,6 +29,7 @@ export class QuizzesController {
   ) {}
 
   @Post()
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() createQuizDto: CreateQuizDto, @Request() req: any): Promise<Quiz> {
     if (req.user.uuid !== createQuizDto.creatorId) {
@@ -81,6 +84,7 @@ export class QuizzesController {
   }
 
   @Put(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
@@ -94,6 +98,7 @@ export class QuizzesController {
   }
 
   @Delete(':id')
+  @UserTypes(UserType.TEACHER)
   @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: string, @Request() req: any): Promise<Quiz | null> {
     const quiz = await this.quizzesService.findQuizById(id);
