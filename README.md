@@ -42,6 +42,19 @@ Application de **gestion de cours en ligne** moderne et intuitive.
 | **Axios**                 | Requêtes HTTP vers le backend                 |
 | **JWT Decode**            | Gestion de l’authentification locale          |
 
+## Technologies Utilisées (Backend)
+
+| Technologie        | Rôle                                        |
+|--------------------|---------------------------------------------|
+| **NestJS**         | Framework NodeJS                            |
+| **TypeScript**     | Sécurité du typage et maintenabilité        |
+| **Mongoose**       | ODM pour MongoDB                            |
+| **BCrypt**         | Hashage de mot de passe                     |
+| **Pino**           | Logger de requête HTTP                      |
+| **JWT**            | Authentification                            |
+| **Swagger**        | Documentation des routes de l'API           |
+| **Jest**           | Tests unitaires                             |
+
 ---
 
 ## Fonctionnalités Détaillées
@@ -121,6 +134,9 @@ MONGO_DATABASE=
 MONGO_APP_NAME=Cluster0
 
 JWT_SECRET=votre_secret_key
+
+OLLAMA_API_URL=votre_url_ollama
+OLLAMA_MODEL=votre_model_ollama
 ```
 
 ```env
